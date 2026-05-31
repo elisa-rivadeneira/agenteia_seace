@@ -1,0 +1,20 @@
+{
+  "fecha_extraccion": "2026-05-24T19:33:06.777018",
+  "fuente": "https://prod4.seace.gob.pe/openegocio/#/lista/43",
+  "segmento": "43 - Telecomunicaciones, radiodifusión y tecnología de la información",
+  "total_procesos_web": 27,
+  "total_procesos_extraidos": 1,
+  "estadisticas": {
+    "entidades_unicas": 1,
+    "con_valor_definido": 0,
+    "valor_total_pen": 0
+  },
+  "procesos": [
+    {
+      "descripcion": "",
+      "entidad": "",
+      "nomenclatura": "",
+      "objeto": ""
+    }
+  ]
+}

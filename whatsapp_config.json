@@ -1,0 +1,24 @@
+{
+  "pywhatkit": {
+    "enabled": false,
+    "tab_close_delay": 3,
+    "send_delay": 15
+  },
+  "evolution": {
+    "enabled": true,
+    "base_url": "https://automation-evolution-api.gnrjtm.easypanel.host",
+    "instance": "Elisa Rivadeneira",
+    "api_key": "429683C4C977415CAAFCCE10F7D57E11"
+  },
+  "twilio": {
+    "enabled": false,
+    "account_sid": "",
+    "auth_token": "",
+    "from_number": ""
+  },
+  "baileys": {
+    "enabled": false,
+    "base_url": "http://localhost:3000",
+    "session": "seace_session"
+  }
+}
