@@ -8,7 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import json
@@ -41,7 +40,8 @@ def extraer_todas_las_oportunidades():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
-    service = Service(ChromeDriverManager().install())
+    # Usar ChromeDriver del sistema (ya instalado en Dockerfile)
+    service = Service('/usr/bin/chromedriver')
     driver = webdriver.Chrome(service=service, options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     wait = WebDriverWait(driver, 30)
