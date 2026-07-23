@@ -48,6 +48,8 @@ def extraer_todas_las_oportunidades():
 
     todas_las_oportunidades = []
     nomenclaturas_vistas = set()  # Para evitar duplicados
+    total_esperado = 0  # Inicializar variable
+    pagina_actual = 1  # Inicializar página
 
     try:
         # Acceder al segmento 43
@@ -67,12 +69,8 @@ def extraer_todas_las_oportunidades():
                 if match:
                     total_esperado = int(match.group(1))
                     print(f"📊 Total de oportunidades esperadas: {total_esperado}")
-                else:
-                    total_esperado = 0
         except:
-            total_esperado = 0
-
-        pagina_actual = 1
+            pass
         sin_mas_paginas = False
 
         while not sin_mas_paginas:
