@@ -29,7 +29,8 @@ def inicializar_agente():
     print("🤖 Agente SEACE inicializado en webhook server")
 
 @app.route('/webhook', methods=['POST'])
-def webhook_evolution():
+@app.route('/webhook/<path:event_type>', methods=['POST'])
+def webhook_evolution(event_type=None):
     """Endpoint para recibir mensajes de Evolution API"""
     try:
         data = request.json
