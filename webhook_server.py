@@ -54,12 +54,17 @@ def webhook_evolution():
                 if texto_mensaje:
                     print(f"💬 Mensaje de {numero_remitente}: {texto_mensaje}")
 
-                    # Procesar comando con agente SEACE
+                    # Procesar comando con agente SEACE en thread separado
                     if agente_seace:
-                        respuesta = procesar_mensaje_con_agente(texto_mensaje, numero_remitente)
-                        if respuesta:
-                            # Enviar respuesta automática
-                            enviar_respuesta_automatica(respuesta, numero_remitente)
+                        def procesar_y_responder():
+                            respuesta = procesar_mensaje_con_agente(texto_mensaje, numero_remitente)
+                            if respuesta:
+                                enviar_respuesta_automatica(respuesta, numero_remitente)
+
+                        thread = threading.Thread(target=procesar_y_responder)
+                        thread.daemon = True
+                        thread.start()
+                        print(f"⚡ Procesando mensaje en background...")
 
         return jsonify({'status': 'success', 'received': True})
 
