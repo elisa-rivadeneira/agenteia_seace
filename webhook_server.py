@@ -137,7 +137,7 @@ def enviar_respuesta_automatica(respuesta: str, numero_destino: str):
             'text': respuesta
         }
 
-        response = requests.post(url, json=data, headers=headers, timeout=30)
+        response = requests.post(url, json=data, headers=headers, timeout=120)
 
         if response.status_code == 201:
             print(f"✅ Respuesta automática enviada a {clean_number}")
