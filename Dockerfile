@@ -21,11 +21,19 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --d
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
-COPY . .
+# Copy only necessary application files
+COPY webhook_server.py .
+COPY agente_whatsapp.py .
+COPY whatsapp_notifier.py .
+COPY seace_extractor_multipagina.py .
+COPY config_empresa.json .
 
 # Create data directory
 RUN mkdir -p /app/data
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
 
 # Expose port
 EXPOSE 5000
@@ -35,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/status || exit 1
 
 # Run application
-CMD ["python", "webhook_server.py"]
+CMD ["python", "-u", "webhook_server.py"]

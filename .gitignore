@@ -36,6 +36,15 @@ seace_*.json
 evolution_*.json
 PyWhatKit_DB.txt
 whatsapp_url*.txt
+whatsapp_config.json
+*.html
+
+# WhatsApp session
+.wwebjs_auth/
+node_modules/
+
+# Evolution API
+evolution-api/
 
 # Chrome/Selenium
 chromedriver*

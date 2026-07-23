@@ -7,10 +7,11 @@ services:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
     env_file:
       - .env
     volumes:
-      - ./data:/app/data
+      - seace-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/status"]
@@ -18,3 +19,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - seace-network
+
+volumes:
+  seace-data:
+    driver: local
+
+networks:
+  seace-network:
+    driver: bridge

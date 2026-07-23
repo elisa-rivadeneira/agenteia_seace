@@ -8,6 +8,10 @@ import json
 from datetime import datetime
 import threading
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -107,15 +111,25 @@ def enviar_respuesta_automatica(respuesta: str, numero_destino: str):
     """Enviar respuesta automática usando Evolution API"""
     try:
         import requests
+        import os
 
         # Limpiar número
         clean_number = numero_destino.replace('@s.whatsapp.net', '').replace('+', '')
 
-        url = "https://automation-evolution-api.gnrjtm.easypanel.host/message/sendText/Elisa Rivadeneira"
+        # Configuración desde variables de entorno
+        api_url = os.getenv('EVOLUTION_API_URL', 'https://automation-evolution-api.gnrjtm.easypanel.host')
+        api_key = os.getenv('EVOLUTION_API_KEY')
+        instance_name = os.getenv('EVOLUTION_INSTANCE_NAME')
+
+        if not api_key or not instance_name:
+            print("❌ EVOLUTION_API_KEY o EVOLUTION_INSTANCE_NAME no configurados")
+            return
+
+        url = f"{api_url}/message/sendText/{instance_name}"
 
         headers = {
             'Content-Type': 'application/json',
-            'apikey': '429683C4C977415CAAFCCE10F7D57E11'
+            'apikey': api_key
         }
 
         data = {
@@ -128,7 +142,7 @@ def enviar_respuesta_automatica(respuesta: str, numero_destino: str):
         if response.status_code == 201:
             print(f"✅ Respuesta automática enviada a {clean_number}")
         else:
-            print(f"❌ Error enviando respuesta: {response.status_code}")
+            print(f"❌ Error enviando respuesta: {response.status_code} - {response.text}")
 
     except Exception as e:
         print(f"❌ Error enviando respuesta automática: {e}")
