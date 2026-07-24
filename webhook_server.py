@@ -85,39 +85,14 @@ def procesar_mensaje_con_agente(mensaje: str, numero: str):
     try:
         print(f"🧠 Procesando con agente: {mensaje}")
 
-        # Si el mensaje empieza con /, es un comando
-        if mensaje.startswith('/'):
-            respuesta = agente_seace.procesar_comando(mensaje)
-            return respuesta
-
-        # Si no es comando, procesar como conversación natural
-        elif any(palabra in mensaje.lower() for palabra in ['estado', 'oportunidades', 'seace', 'reporte']):
-            # Mapear palabras clave a comandos
-            if 'estado' in mensaje.lower():
-                return agente_seace.procesar_comando('/estado')
-            elif 'urgentes' in mensaje.lower() or 'urgente' in mensaje.lower():
-                return agente_seace.procesar_comando('/urgentes')
-            elif 'reporte' in mensaje.lower():
-                return agente_seace.procesar_comando('/reporte')
-            elif 'oportunidades' in mensaje.lower() or 'escanear' in mensaje.lower():
-                return agente_seace.procesar_comando('/escanear')
-            else:
-                return agente_seace.procesar_comando('/ayuda')
-
-        # Respuesta por defecto
-        return """🤖 Hola! Soy tu agente SEACE.
-
-Comandos disponibles:
-• /estado - Estado del sistema
-• /escanear - Buscar oportunidades
-• /urgentes - Oportunidades urgentes
-• /reporte - Reporte completo
-• /ayuda - Lista de comandos
-
-O puedes escribir: "estado", "urgentes", "reporte", etc."""
+        # Usar el procesador del agente que integra IA
+        respuesta = agente_seace.procesar_comando(mensaje)
+        return respuesta
 
     except Exception as e:
         print(f"❌ Error procesando mensaje: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def enviar_respuesta_automatica(respuesta: str, numero_destino: str):
