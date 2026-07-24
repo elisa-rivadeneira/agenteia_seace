@@ -508,7 +508,7 @@ ADMIN_DASHBOARD_HTML = """
             <div class="conversations-list">
                 {% for numero, conv in conversaciones %}
                 <div class="conversation-item" onclick="loadConversation('{{ numero }}')">
-                    <div class="numero">📱 {{ numero }}</div>
+                    <div class="numero">📱 {{ numero.replace('@s.whatsapp.net', '').replace('+', '') }}</div>
                     <div class="meta">
                         <span>{{ conv.ultima_interaccion[11:16] }} - {{ conv.ultima_interaccion[8:10]}}/{{ conv.ultima_interaccion[5:7] }}</span>
                         <span class="badge">{{ conv.total_mensajes }}</span>
@@ -532,9 +532,10 @@ ADMIN_DASHBOARD_HTML = """
                 .then(data => {
                     const chatContent = document.getElementById('chat-content');
                     chatContent.className = '';
+                    const numeroLimpio = numero.replace('@s.whatsapp.net', '').replace('+', '');
                     chatContent.innerHTML = `
                         <div class="chat-header">
-                            <h2>📱 ${numero}</h2>
+                            <h2>📱 ${numeroLimpio}</h2>
                             <div style="font-size: 12px; color: #667781; margin-top: 5px;">
                                 Primera interacción: ${data.primera_interaccion.substring(0, 19)} |
                                 Total mensajes: ${data.total_mensajes}
