@@ -36,6 +36,7 @@ COPY agente_whatsapp.py .
 COPY whatsapp_notifier.py .
 COPY seace_extractor_multipagina.py .
 COPY seace_extractor_api.py .
+COPY seace_extractor_ocds.py .
 COPY config_empresa.json .
 
 # Create data directory
