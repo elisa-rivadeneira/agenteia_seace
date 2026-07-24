@@ -62,6 +62,8 @@ IMPORTANTE:
   📅 Fin consultas: [fecha_fin]
   📅 Presentación propuestas: [fecha_presentacion]
 - NO omitas ninguna de estas 3 fechas, son críticas para la decisión
+- SIEMPRE incluye el valor referencial 💰 cuando des detalles de una oportunidad
+- SIEMPRE incluye el enlace directo 🔗 cuando el usuario pida más información específica
 - Sé conciso, profesional y directo
 - Usa emojis para mejor visualización en WhatsApp
 
@@ -143,7 +145,8 @@ Incluye:
             contexto += f"   📅 Fecha inicio consultas: {op.get('fecha_inicio', 'N/A')}\n"
             contexto += f"   📅 Fecha fin consultas: {op.get('fecha_fin', 'N/A')}\n"
             contexto += f"   📅 Fecha presentación propuestas: {op.get('fecha_presentacion', 'N/A')}\n"
-            contexto += f"   💰 Valor: {op.get('valor_referencial', '---')} {op.get('moneda', '')}\n"
+            contexto += f"   💰 Valor referencial: {op.get('valor_referencial', '---')} {op.get('moneda', '')}\n"
+            contexto += f"   🔗 URL SEACE: {op.get('url_seace', 'N/A')}\n"
             if op.get('razones'):
                 contexto += f"   Razones: {', '.join(op.get('razones', []))}\n"
             contexto += "\n"

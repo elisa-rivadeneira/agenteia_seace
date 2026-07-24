@@ -60,9 +60,10 @@ def extraer_oportunidades_realtime():
         oportunidades = []
 
         for idx, item in enumerate(data):
+            nomenclatura = item.get('nomenclatura', '')
             oportunidad = {
                 "numero": idx + 1,
-                "nomenclatura": item.get('nomenclatura', ''),
+                "nomenclatura": nomenclatura,
                 "entidad": item.get('detEntidad', ''),
                 "tipo_proceso": item.get('detTipoProceso', ''),
                 "modalidad": item.get('detModalidadSeleccion', ''),
@@ -83,6 +84,7 @@ def extraer_oportunidades_realtime():
                 "version_seace": item.get('versionSeace', ''),
                 "cubso_codigo": item.get('codCubso', ''),
                 "cubso_descripcion": item.get('detCubso', ''),
+                "url_seace": f"https://prod4.seace.gob.pe/openegocio/#/busqueda-por-item?numeroProcesoItem={nomenclatura}" if nomenclatura else "",
                 "fecha_extraccion": datetime.now().isoformat()
             }
 
