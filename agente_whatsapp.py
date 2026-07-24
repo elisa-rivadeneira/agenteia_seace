@@ -74,6 +74,8 @@ _Escribe cualquier comando para comenzar_"""
     def comando_escanear(self, args=""):
         """Ejecuta escaneo inmediato"""
         try:
+            print("🔍 Iniciando escaneo SEACE...")
+
             # Ejecutar extractor
             resultado = subprocess.run(
                 ['python3', 'seace_extractor_multipagina.py'],
@@ -81,6 +83,11 @@ _Escribe cualquier comando para comenzar_"""
                 text=True,
                 timeout=300  # 5 minutos máximo
             )
+
+            # Log de depuración
+            print(f"📊 Return code: {resultado.returncode}")
+            print(f"📤 STDOUT: {resultado.stdout[:500]}")
+            print(f"📛 STDERR: {resultado.stderr[:500]}")
 
             if resultado.returncode == 0:
                 # Cargar resultados
@@ -111,11 +118,15 @@ _Usa /reporte para ver detalles completos_"""
                 else:
                     return "⚠️ Escaneo completado pero no se encontró archivo de resultados"
             else:
-                return f"❌ Error en escaneo:\n{resultado.stderr[:200]}"
+                error_msg = resultado.stderr[:300] if resultado.stderr else resultado.stdout[:300]
+                return f"❌ Error en escaneo:\n{error_msg}"
 
         except subprocess.TimeoutExpired:
             return "⏳ Escaneo en proceso... Puede tardar unos minutos. Usa /estado para verificar."
         except Exception as e:
+            import traceback
+            print(f"❌ EXCEPCIÓN en escaneo: {e}")
+            print(traceback.format_exc())
             return f"❌ Error ejecutando escaneo: {str(e)[:100]}"
 
     def comando_reporte(self, args=""):
