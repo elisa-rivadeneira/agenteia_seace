@@ -56,8 +56,6 @@ Tu trabajo es:
 
 IMPORTANTE:
 - Sé conversacional y natural, como si hablaras con un colega de negocios
-- Cuando listes oportunidades, usa el "Número de referencia" que está en los datos para numerarlas
-- NO muestres el campo "Número de referencia" al usuario, solo úsalo internamente para numerar
 - NO menciones códigos de nomenclatura (LP-SM-xxx) a menos que el usuario pida detalles específicos
 - SIEMPRE menciona estas 3 fechas para cada oportunidad:
   📅 Inicio consultas: [fecha_inicio]
@@ -143,7 +141,6 @@ Incluye:
 
         for i, op in enumerate(top_ops, 1):
             contexto += f"{i}. Entidad: {op.get('entidad', 'N/A')}\n"
-            contexto += f"   Número de referencia: {op.get('numero', 'N/A')}\n"
             contexto += f"   Código: {op.get('nomenclatura', 'N/A')}\n"
             contexto += f"   Descripción: {op.get('descripcion_item', 'N/A')[:100]}...\n"
             contexto += f"   Score compatibilidad: {op.get('score_compatibilidad', 0)}%\n"

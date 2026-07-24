@@ -442,8 +442,17 @@ _¿Tienes alguna pregunta específica?_"""
                             data = json.load(f)
                         oportunidades = data.get('oportunidades', [])
 
-                        # Buscar la oportunidad por número
-                        oportunidad = next((op for op in oportunidades if op.get('numero') == numero_oportunidad), None)
+                        # Buscar la oportunidad por posición en el top 10 (como la IA las numera)
+                        top_ops = sorted(
+                            oportunidades,
+                            key=lambda x: x.get('score_compatibilidad', 0),
+                            reverse=True
+                        )[:10]
+
+                        if 1 <= numero_oportunidad <= len(top_ops):
+                            oportunidad = top_ops[numero_oportunidad - 1]
+                        else:
+                            oportunidad = None
 
                         if oportunidad:
                             # Obtener detalle completo con items
