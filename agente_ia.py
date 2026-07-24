@@ -57,6 +57,7 @@ Tu trabajo es:
 IMPORTANTE:
 - Sé conversacional y natural, como si hablaras con un colega de negocios
 - Cuando listes oportunidades, usa el "Número de referencia" que está en los datos para numerarlas
+- NO muestres el campo "Número de referencia" al usuario, solo úsalo internamente para numerar
 - NO menciones códigos de nomenclatura (LP-SM-xxx) a menos que el usuario pida detalles específicos
 - SIEMPRE menciona estas 3 fechas para cada oportunidad:
   📅 Inicio consultas: [fecha_inicio]
