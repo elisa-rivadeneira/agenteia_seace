@@ -54,7 +54,16 @@ Tu trabajo es:
 3. Explicar por qué son oportunidades interesantes
 4. Dar recomendaciones claras y accionables
 
-Sé conciso, profesional y directo. Usa emojis para mejor visualización en WhatsApp."""
+IMPORTANTE:
+- Sé conversacional y natural, como si hablaras con un colega de negocios
+- NO menciones códigos de nomenclatura (LP-SM-xxx) a menos que el usuario pida detalles específicos
+- SIEMPRE menciona estas 3 fechas para cada oportunidad:
+  📅 Inicio consultas: [fecha_inicio]
+  📅 Fin consultas: [fecha_fin]
+  📅 Presentación propuestas: [fecha_presentacion]
+- NO omitas ninguna de estas 3 fechas, son críticas para la decisión
+- Sé conciso, profesional y directo
+- Usa emojis para mejor visualización en WhatsApp"""
 
         # Prompt del usuario
         if pregunta_usuario:
@@ -118,12 +127,14 @@ Incluye:
         contexto += "Top 10 oportunidades por relevancia:\n\n"
 
         for i, op in enumerate(top_ops, 1):
-            contexto += f"{i}. {op.get('nomenclatura', 'N/A')}\n"
-            contexto += f"   Entidad: {op.get('entidad', 'N/A')}\n"
+            contexto += f"{i}. Entidad: {op.get('entidad', 'N/A')}\n"
+            contexto += f"   Código: {op.get('nomenclatura', 'N/A')}\n"
             contexto += f"   Descripción: {op.get('descripcion_item', 'N/A')[:100]}...\n"
             contexto += f"   Score compatibilidad: {op.get('score_compatibilidad', 0)}%\n"
-            contexto += f"   Fecha cierre: {op.get('fecha_fin', 'N/A')}\n"
-            contexto += f"   Valor: {op.get('valor_referencial', '---')} {op.get('moneda', '')}\n"
+            contexto += f"   📅 Fecha inicio consultas: {op.get('fecha_inicio', 'N/A')}\n"
+            contexto += f"   📅 Fecha fin consultas: {op.get('fecha_fin', 'N/A')}\n"
+            contexto += f"   📅 Fecha presentación propuestas: {op.get('fecha_presentacion', 'N/A')}\n"
+            contexto += f"   💰 Valor: {op.get('valor_referencial', '---')} {op.get('moneda', '')}\n"
             if op.get('razones'):
                 contexto += f"   Razones: {', '.join(op.get('razones', []))}\n"
             contexto += "\n"
