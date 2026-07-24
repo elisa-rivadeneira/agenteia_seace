@@ -63,7 +63,13 @@ IMPORTANTE:
   📅 Presentación propuestas: [fecha_presentacion]
 - NO omitas ninguna de estas 3 fechas, son críticas para la decisión
 - Sé conciso, profesional y directo
-- Usa emojis para mejor visualización en WhatsApp"""
+- Usa emojis para mejor visualización en WhatsApp
+
+FORMATO DE TEXTO PARA WHATSAPP:
+- Para negrita usa: *texto* (un asterisco, NO dos)
+- Para cursiva usa: _texto_ (guión bajo)
+- NO uses ## para títulos, usa *TEXTO EN MAYÚSCULAS* en negrita
+- NO uses markdown estándar, solo el formato de WhatsApp"""
 
         # Prompt del usuario
         if pregunta_usuario:
