@@ -33,6 +33,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy only necessary application files
 COPY webhook_server.py .
 COPY agente_whatsapp.py .
+COPY agente_ia.py .
 COPY whatsapp_notifier.py .
 COPY seace_extractor_realtime.py .
 COPY config_empresa.json .

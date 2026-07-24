@@ -19,10 +19,24 @@ try:
 except ImportError:
     DIRECTO_DISPONIBLE = False
 
+# Importar agente IA
+try:
+    from agente_ia import AgenteIASEACE
+    IA_DISPONIBLE = True
+except ImportError:
+    IA_DISPONIBLE = False
+
 class AgenteWhatsAppSEACE:
     def __init__(self):
         """Inicializa el agente conversacional"""
         self.notifier = WhatsAppNotifier()
+
+        # Inicializar agente IA si está disponible
+        if IA_DISPONIBLE:
+            self.agente_ia = AgenteIASEACE()
+        else:
+            self.agente_ia = None
+
         self.comandos = {
             '/escanear': self.comando_escanear,
             '/reporte': self.comando_reporte,
@@ -99,18 +113,24 @@ _Escribe cualquier comando para comenzar_"""
                         data = json.load(f)
 
                     total = data.get('total_oportunidades', 0)
-                    relevantes = len([op for op in data.get('oportunidades', []) if op.get('score_compatibilidad', 0) >= 25])
+                    oportunidades = data.get('oportunidades', [])
+                    relevantes = len([op for op in oportunidades if op.get('score_compatibilidad', 0) >= 25])
 
                     self.estado_monitor['ultimo_escaneo'] = datetime.now()
                     self.estado_monitor['total_oportunidades'] = total
                     self.estado_monitor['oportunidades_relevantes'] = relevantes
 
-                    return f"""✅ *ESCANEO COMPLETADO*
+                    # Usar agente IA para análisis inteligente
+                    if self.agente_ia and self.agente_ia.activo:
+                        print("🤖 Generando análisis con IA...")
+                        return self.agente_ia.analizar_oportunidades(oportunidades)
+                    else:
+                        # Respuesta básica sin IA
+                        return f"""✅ *ESCANEO COMPLETADO*
 
 🔍 *RESULTADOS:*
 • Total encontradas: {total}
 • Relevantes (≥25%): {relevantes}
-• Archivo: {archivo_mas_reciente}
 
 ⏰ Escaneo: {datetime.now().strftime('%H:%M:%S')}
 
@@ -403,12 +423,35 @@ _¿Tienes alguna pregunta específica?_"""
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
-        # Respuestas inteligentes básicas
+        # Si hay agente IA y parece una pregunta sobre oportunidades, usar IA
+        if self.agente_ia and self.agente_ia.activo:
+            # Detectar si pregunta sobre oportunidades
+            if any(palabra in mensaje_lower for palabra in [
+                'oportunidad', 'licitacion', 'licitación', 'proceso', 'convocatoria',
+                'cuántas', 'cuantas', 'qué hay', 'que hay', 'mostrar', 'analiza',
+                'recomiend', 'mejor', 'conveniente', 'debería', 'deberia'
+            ]):
+                # Cargar últimas oportunidades
+                try:
+                    archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
+                    if archivos_json:
+                        archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
+                        with open(archivo_mas_reciente, 'r') as f:
+                            data = json.load(f)
+                        oportunidades = data.get('oportunidades', [])
+
+                        if oportunidades:
+                            print(f"🤖 Respondiendo con IA: {mensaje[:50]}...")
+                            return self.agente_ia.responder_pregunta(mensaje, oportunidades)
+                except Exception as e:
+                    print(f"⚠️ Error cargando datos para IA: {e}")
+
+        # Respuestas básicas sin IA
         if any(palabra in mensaje_lower for palabra in ['hola', 'buenas', 'saludo']):
-            return "👋 ¡Hola! Soy tu agente SEACE. Usa /ayuda para ver qué puedo hacer."
+            return "👋 ¡Hola! Soy tu agente SEACE con IA. Pregúntame sobre oportunidades o usa /ayuda."
 
         elif any(palabra in mensaje_lower for palabra in ['oportunidades', 'cuántas', 'total']):
-            return f"📊 Actualmente hay {self.estado_monitor['total_oportunidades']} oportunidades. Usa /reporte para detalles."
+            return f"📊 Actualmente hay {self.estado_monitor['total_oportunidades']} oportunidades. Usa /escanear para actualizar."
 
         elif any(palabra in mensaje_lower for palabra in ['urgente', 'urgent', 'pronto']):
             return "🚨 Para ver oportunidades urgentes usa: /urgentes"
@@ -426,10 +469,10 @@ _¿Tienes alguna pregunta específica?_"""
             return f"""🤔 No entendí tu consulta: "{mensaje[:50]}..."
 
 💡 *PUEDES PREGUNTAR:*
-• "¿Cuántas oportunidades hay?"
-• "Muéstrame las urgentes"
-• "Estado del sistema"
-• O usar comandos como /reporte, /escanear
+• "¿Qué oportunidades hay en julio?"
+• "¿Cuáles me recomiendas?"
+• "Analiza las licitaciones"
+• O usar comandos como /escanear, /reporte
 
 Usa /ayuda para ver todos los comandos."""
 
