@@ -30,7 +30,7 @@ def extraer_todas_las_oportunidades():
         print("⚠️ No se pudo cargar config_empresa.json")
         config = None
 
-    # Configurar navegador
+    # Configurar navegador con evasión de detección mejorada
     options = Options()
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
@@ -40,11 +40,25 @@ def extraer_todas_las_oportunidades():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
+    # User agent realista
+    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+
+    # Headers adicionales para evasión
+    options.add_argument('--accept-language=es-PE,es;q=0.9,en;q=0.8')
+    options.add_argument('--accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
+
     # Usar ChromeDriver del sistema (ya instalado en Dockerfile)
     service = Service('/usr/bin/chromedriver')
     driver = webdriver.Chrome(service=service, options=options)
+
+    # Scripts anti-detección adicionales
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    wait = WebDriverWait(driver, 30)
+    driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+        "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    })
+
+    # Aumentar timeout
+    wait = WebDriverWait(driver, 45)
 
     todas_las_oportunidades = []
     nomenclaturas_vistas = set()  # Para evitar duplicados
@@ -58,7 +72,7 @@ def extraer_todas_las_oportunidades():
         driver.get(url)
 
         print("⏳ Esperando carga inicial completa...")
-        time.sleep(15)
+        time.sleep(25)  # Aumentar a 25 segundos para evitar detección
 
         # DEBUG: Guardar screenshot y HTML para diagnóstico
         try:
