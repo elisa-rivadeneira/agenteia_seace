@@ -37,6 +37,7 @@ COPY agente_ia.py .
 COPY whatsapp_notifier.py .
 COPY seace_extractor_realtime.py .
 COPY seace_detalle.py .
+COPY conversaciones_logger.py .
 COPY config_empresa.json .
 
 # Create data directory

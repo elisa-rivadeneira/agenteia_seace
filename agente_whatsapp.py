@@ -10,6 +10,7 @@ import subprocess
 import threading
 from datetime import datetime, timedelta
 from whatsapp_notifier import WhatsAppNotifier
+from conversaciones_logger import log_conversacion
 import os
 
 # Importar el nuevo sistema directo

@@ -3,7 +3,8 @@
 Servidor Webhook Local para Evolution API + Agente SEACE
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string, redirect, session
+from functools import wraps
 import json
 from datetime import datetime
 import threading
@@ -14,12 +15,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'seace-admin-secret-key-change-this')
 
 # Almacenar mensajes recibidos
 mensajes_recibidos = []
 
 # Importar agente SEACE
 from agente_whatsapp import AgenteWhatsAppSEACE
+from conversaciones_logger import log_conversacion
 agente_seace = None
 
 def inicializar_agente():
@@ -67,6 +70,8 @@ def webhook_evolution(event_type=None):
                         def procesar_y_responder():
                             respuesta = procesar_mensaje_con_agente(texto_mensaje, numero_remitente)
                             if respuesta:
+                                # Log conversación
+                                log_conversacion(numero_remitente, texto_mensaje, respuesta)
                                 enviar_respuesta_automatica(respuesta, numero_remitente)
 
                         thread = threading.Thread(target=procesar_y_responder)
@@ -170,6 +175,388 @@ def send_manual():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ===== ADMIN ROUTES =====
+
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
+def require_auth(f):
+    """Decorator para requerir autenticación"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('admin_authenticated'):
+            return redirect('/admin/login')
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Login del admin"""
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if password == ADMIN_PASSWORD:
+            session['admin_authenticated'] = True
+            return redirect('/admin')
+        else:
+            return render_template_string(LOGIN_HTML, error="Contraseña incorrecta")
+    return render_template_string(LOGIN_HTML, error=None)
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Logout del admin"""
+    session.pop('admin_authenticated', None)
+    return redirect('/admin/login')
+
+@app.route('/admin')
+@require_auth
+def admin_dashboard():
+    """Dashboard del admin"""
+    from conversaciones_logger import obtener_todas_conversaciones, obtener_estadisticas
+
+    conversaciones = obtener_todas_conversaciones()
+    stats = obtener_estadisticas()
+
+    # Ordenar por última interacción
+    conversaciones_lista = sorted(
+        conversaciones.items(),
+        key=lambda x: x[1].get('ultima_interaccion', ''),
+        reverse=True
+    )
+
+    return render_template_string(ADMIN_DASHBOARD_HTML,
+                                 conversaciones=conversaciones_lista,
+                                 stats=stats)
+
+@app.route('/admin/conversacion/<numero>')
+@require_auth
+def admin_conversacion(numero):
+    """Ver historial de una conversación"""
+    from conversaciones_logger import obtener_conversacion
+
+    conversacion = obtener_conversacion(numero)
+    if not conversacion:
+        return "Conversación no encontrada", 404
+
+    return render_template_string(CONVERSACION_DETAIL_HTML,
+                                 numero=numero,
+                                 conversacion=conversacion)
+
+# Templates HTML
+LOGIN_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login - SEACE Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 300px;
+        }
+        h2 { text-align: center; color: #333; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #5568d3; }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>🤖 SEACE Bot Admin</h2>
+        <form method="POST">
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Ingresar</button>
+        </form>
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+"""
+
+ADMIN_DASHBOARD_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Admin - SEACE Bot</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 24px; }
+        .header .logout {
+            float: right;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        .conversations {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .conversations h2 {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .conversation-item:hover {
+            background: #f8f9fa;
+        }
+        .conversation-item a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .conversation-info {
+            flex: 1;
+        }
+        .conversation-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin/logout" class="logout">Cerrar sesión</a>
+        <h1>🤖 SEACE Bot - Dashboard Admin</h1>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>TOTAL USUARIOS</h3>
+                <div class="value">{{ stats.total_usuarios }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>TOTAL MENSAJES</h3>
+                <div class="value">{{ stats.total_mensajes }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>PROMEDIO POR USUARIO</h3>
+                <div class="value">{{ (stats.total_mensajes / stats.total_usuarios) | round(1) if stats.total_usuarios > 0 else 0 }}</div>
+            </div>
+        </div>
+
+        <div class="conversations">
+            <h2>Conversaciones</h2>
+            {% for numero, conv in conversaciones %}
+            <div class="conversation-item">
+                <div class="conversation-info">
+                    <a href="/admin/conversacion/{{ numero }}">{{ numero }}</a>
+                    <div class="conversation-meta">
+                        Última interacción: {{ conv.ultima_interaccion[:19] }}
+                    </div>
+                </div>
+                <span class="badge">{{ conv.total_mensajes }} mensajes</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+CONVERSACION_DETAIL_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Conversación {{ numero }} - SEACE Bot</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 24px; }
+        .header a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+            float: right;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .messages {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .message-timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .message-user {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+        }
+        .message-bot {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+        }
+        .message-content {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin">← Volver</a>
+        <h1>📱 Conversación: {{ numero }}</h1>
+    </div>
+
+    <div class="container">
+        <div class="info-box">
+            <h3>Información</h3>
+            <p><strong>Número:</strong> {{ numero }}</p>
+            <p><strong>Primera interacción:</strong> {{ conversacion.primera_interaccion[:19] }}</p>
+            <p><strong>Última interacción:</strong> {{ conversacion.ultima_interaccion[:19] }}</p>
+            <p><strong>Total mensajes:</strong> {{ conversacion.total_mensajes }}</p>
+        </div>
+
+        <div class="messages">
+            <h3 style="margin-bottom: 20px;">Historial de mensajes</h3>
+            {% for msg in conversacion.historial %}
+            <div class="message message-user">
+                <div class="message-timestamp">👤 Usuario - {{ msg.timestamp[:19] }}</div>
+                <div class="message-content">{{ msg.mensaje_usuario }}</div>
+            </div>
+            <div class="message message-bot">
+                <div class="message-timestamp">🤖 Bot - {{ msg.timestamp[:19] }}</div>
+                <div class="message-content">{{ msg.respuesta_bot }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
 def iniciar_servidor():
     """Iniciar servidor webhook"""
     print("🚀 INICIANDO WEBHOOK SERVER PARA EVOLUTION API")
@@ -182,6 +569,7 @@ def iniciar_servidor():
     print("   http://localhost:5000/webhook")
     print("   http://localhost:5000/status")
     print("   http://localhost:5000/messages")
+    print("   http://localhost:5000/admin (Dashboard)")
 
     print("\n🔧 Para exponer públicamente (usar en otra terminal):")
     print("   ngrok http 5000")
