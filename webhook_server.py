@@ -240,6 +240,18 @@ def admin_conversacion(numero):
                                  numero=numero,
                                  conversacion=conversacion)
 
+@app.route('/admin/conversacion/<numero>/json')
+@require_auth
+def admin_conversacion_json(numero):
+    """API JSON para obtener conversación"""
+    from conversaciones_logger import obtener_conversacion
+
+    conversacion = obtener_conversacion(numero)
+    if not conversacion:
+        return jsonify({'error': 'Not found'}), 404
+
+    return jsonify(conversacion)
+
 # Templates HTML
 LOGIN_HTML = """
 <!DOCTYPE html>
@@ -315,130 +327,247 @@ ADMIN_DASHBOARD_HTML = """
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
+            background: #f0f2f5;
+            height: 100vh;
+            overflow: hidden;
         }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .header h1 { font-size: 24px; }
+        .header h1 { font-size: 20px; }
         .header .logout {
-            float: right;
             color: white;
             text-decoration: none;
             background: rgba(255,255,255,0.2);
             padding: 8px 15px;
             border-radius: 5px;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .main-container {
+            display: flex;
+            height: calc(100vh - 65px);
         }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
+        .sidebar {
+            width: 350px;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-right: 1px solid #e1e4e8;
+            display: flex;
+            flex-direction: column;
         }
-        .stat-card h3 {
-            color: #667eea;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .stat-card .value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333;
-        }
-        .conversations {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        .conversations h2 {
-            padding: 20px;
+        .stats-bar {
+            padding: 15px;
             background: #f8f9fa;
             border-bottom: 1px solid #e1e4e8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .stat-mini {
+            text-align: center;
+        }
+        .stat-mini .label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-mini .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
         }
         .conversation-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e1e4e8;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f2f5;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        .conversation-item:hover {
-            background: #f8f9fa;
+        .conversation-item:hover,
+        .conversation-item.active {
+            background: #f5f7fa;
         }
-        .conversation-item a {
-            text-decoration: none;
-            color: #667eea;
-            font-weight: bold;
+        .conversation-item .numero {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
         }
-        .conversation-info {
-            flex: 1;
-        }
-        .conversation-meta {
+        .conversation-item .meta {
             font-size: 12px;
             color: #666;
-            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
         }
-        .badge {
+        .conversation-item .badge {
             background: #667eea;
             color: white;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #e5ddd5;
+        }
+        .chat-header {
+            background: #f0f2f5;
+            padding: 15px 20px;
+            border-bottom: 1px solid #d1d7db;
+        }
+        .chat-header h2 {
+            font-size: 16px;
+            color: #333;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-user {
+            align-items: flex-end;
+        }
+        .message-bot {
+            align-items: flex-start;
+        }
+        .message-bubble {
+            max-width: 65%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .message-user .message-bubble {
+            background: #dcf8c6;
+        }
+        .message-bot .message-bubble {
+            background: white;
+        }
+        .message-time {
+            font-size: 11px;
+            color: #667781;
+            margin-top: 4px;
+            padding: 0 5px;
+        }
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #667781;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="header">
+        <h1>🤖 SEACE Bot - Admin Dashboard</h1>
         <a href="/admin/logout" class="logout">Cerrar sesión</a>
-        <h1>🤖 SEACE Bot - Dashboard Admin</h1>
     </div>
 
-    <div class="container">
-        <div class="stats">
-            <div class="stat-card">
-                <h3>TOTAL USUARIOS</h3>
-                <div class="value">{{ stats.total_usuarios }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>TOTAL MENSAJES</h3>
-                <div class="value">{{ stats.total_mensajes }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>PROMEDIO POR USUARIO</h3>
-                <div class="value">{{ (stats.total_mensajes / stats.total_usuarios) | round(1) if stats.total_usuarios > 0 else 0 }}</div>
-            </div>
-        </div>
-
-        <div class="conversations">
-            <h2>Conversaciones</h2>
-            {% for numero, conv in conversaciones %}
-            <div class="conversation-item">
-                <div class="conversation-info">
-                    <a href="/admin/conversacion/{{ numero }}">{{ numero }}</a>
-                    <div class="conversation-meta">
-                        Última interacción: {{ conv.ultima_interaccion[:19] }}
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="stats-bar">
+                <div class="stats-grid">
+                    <div class="stat-mini">
+                        <div class="label">Usuarios</div>
+                        <div class="value">{{ stats.total_usuarios }}</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="label">Mensajes</div>
+                        <div class="value">{{ stats.total_mensajes }}</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="label">Promedio</div>
+                        <div class="value">{{ (stats.total_mensajes / stats.total_usuarios) | round(1) if stats.total_usuarios > 0 else 0 }}</div>
                     </div>
                 </div>
-                <span class="badge">{{ conv.total_mensajes }} mensajes</span>
             </div>
-            {% endfor %}
+
+            <div class="conversations-list">
+                {% for numero, conv in conversaciones %}
+                <div class="conversation-item" onclick="loadConversation('{{ numero }}')">
+                    <div class="numero">📱 {{ numero }}</div>
+                    <div class="meta">
+                        <span>{{ conv.ultima_interaccion[11:16] }} - {{ conv.ultima_interaccion[8:10]}}/{{ conv.ultima_interaccion[5:7] }}</span>
+                        <span class="badge">{{ conv.total_mensajes }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div id="chat-content" class="empty-state">
+                Selecciona una conversación para ver el historial
+            </div>
         </div>
     </div>
+
+    <script>
+        function loadConversation(numero) {
+            fetch('/admin/conversacion/' + numero + '/json')
+                .then(r => r.json())
+                .then(data => {
+                    const chatContent = document.getElementById('chat-content');
+                    chatContent.className = '';
+                    chatContent.innerHTML = `
+                        <div class="chat-header">
+                            <h2>📱 ${numero}</h2>
+                            <div style="font-size: 12px; color: #667781; margin-top: 5px;">
+                                Primera interacción: ${data.primera_interaccion.substring(0, 19)} |
+                                Total mensajes: ${data.total_mensajes}
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="messages"></div>
+                    `;
+
+                    const messagesDiv = document.getElementById('messages');
+                    data.historial.forEach(msg => {
+                        messagesDiv.innerHTML += `
+                            <div class="message message-user">
+                                <div class="message-bubble">
+                                    <div class="message-text">${msg.mensaje_usuario}</div>
+                                </div>
+                                <div class="message-time">👤 Usuario - ${msg.timestamp.substring(11, 19)}</div>
+                            </div>
+                            <div class="message message-bot">
+                                <div class="message-bubble">
+                                    <div class="message-text">${msg.respuesta_bot}</div>
+                                </div>
+                                <div class="message-time">🤖 Bot - ${msg.timestamp.substring(11, 19)}</div>
+                            </div>
+                        `;
+                    });
+
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                });
+
+            // Mark as active
+            document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 </body>
 </html>
 """
