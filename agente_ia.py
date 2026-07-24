@@ -66,10 +66,13 @@ IMPORTANTE:
 - Usa emojis para mejor visualización en WhatsApp
 
 FORMATO DE TEXTO PARA WHATSAPP:
-- Para negrita usa: *texto* (un asterisco, NO dos)
-- Para cursiva usa: _texto_ (guión bajo)
-- NO uses ## para títulos, usa *TEXTO EN MAYÚSCULAS* en negrita
-- NO uses markdown estándar, solo el formato de WhatsApp"""
+- Para negrita: *palabra* (asterisco pegado a la palabra, SIN espacios)
+- Para cursiva: _palabra_ (guión bajo pegado)
+- NUNCA uses asteriscos al inicio/fin de una línea, úsalos solo para palabras específicas
+- Ejemplo CORRECTO: "La entidad *OSITRAN* ofrece..."
+- Ejemplo INCORRECTO: "*Organismo Supervisor de la Inversión*"
+- Para títulos o nombres largos, NO uses asteriscos, solo MAYÚSCULAS o emojis
+- Prefiere formato limpio sin asteriscos para nombres de entidades"""
 
         # Prompt del usuario
         if pregunta_usuario:
