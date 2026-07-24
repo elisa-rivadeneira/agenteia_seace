@@ -425,7 +425,47 @@ _¿Tienes alguna pregunta específica?_"""
 
         # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
         if self.agente_ia and self.agente_ia.activo:
-            # Detectar si pregunta sobre oportunidades
+            # Detectar si pide detalle de una oportunidad específica (ej: "oportunidad 4", "detalle del 2")
+            import re
+            match_detalle = re.search(r'(?:oportunidad|detalle|información|info|mas sobre|más sobre)\s+(?:de\s+)?(?:la\s+)?(?:número|numero|#)?\s*(\d+)', mensaje_lower)
+
+            if match_detalle:
+                numero_oportunidad = int(match_detalle.group(1))
+                print(f"🔍 Solicitud de detalle para oportunidad #{numero_oportunidad}")
+
+                # Cargar oportunidades
+                try:
+                    archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
+                    if archivos_json:
+                        archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
+                        with open(archivo_mas_reciente, 'r') as f:
+                            data = json.load(f)
+                        oportunidades = data.get('oportunidades', [])
+
+                        # Buscar la oportunidad por número
+                        oportunidad = next((op for op in oportunidades if op.get('numero') == numero_oportunidad), None)
+
+                        if oportunidad:
+                            # Obtener detalle completo con items
+                            from seace_detalle import obtener_detalle_oportunidad
+                            id_proc = oportunidad.get('id_procedimiento')
+
+                            if id_proc:
+                                detalle = obtener_detalle_oportunidad(id_proc)
+                                if detalle:
+                                    # Agregar items al contexto
+                                    oportunidad['items_detalle'] = detalle.get('items', [])
+                                    print(f"✅ Detalle obtenido con {len(detalle.get('items', []))} items")
+                                    return self.agente_ia.responder_pregunta(mensaje, [oportunidad])
+
+                        return f"❌ No encontré la oportunidad #{numero_oportunidad}. Usa /escanear para actualizar."
+                except Exception as e:
+                    print(f"⚠️ Error obteniendo detalle: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    return f"❌ Error obteniendo detalle: {str(e)[:100]}"
+
+            # Detectar si pregunta sobre oportunidades en general
             if any(palabra in mensaje_lower for palabra in [
                 'oportunidad', 'licitacion', 'licitación', 'proceso', 'convocatoria',
                 'cuántas', 'cuantas', 'qué hay', 'que hay', 'mostrar', 'analiza',

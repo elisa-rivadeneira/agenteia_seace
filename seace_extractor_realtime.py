@@ -63,6 +63,7 @@ def extraer_oportunidades_realtime():
             nomenclatura = item.get('nomenclatura', '')
             oportunidad = {
                 "numero": idx + 1,
+                "id_procedimiento": item.get('idProcedimiento', ''),
                 "nomenclatura": nomenclatura,
                 "entidad": item.get('detEntidad', ''),
                 "tipo_proceso": item.get('detTipoProceso', ''),

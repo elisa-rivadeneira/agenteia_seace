@@ -62,6 +62,7 @@ IMPORTANTE:
   📅 Fin consultas: [fecha_fin]
   📅 Presentación propuestas: [fecha_presentacion]
 - NO omitas ninguna de estas 3 fechas, son críticas para la decisión
+- Si hay items del procedimiento disponibles, SIEMPRE lístalos con detalle
 - SIEMPRE incluye el enlace directo 🔗 cuando el usuario pida más información específica
 - El valor referencial y bases completas están disponibles en el enlace de SEACE
 - Sé conciso, profesional y directo
@@ -146,6 +147,16 @@ Incluye:
             contexto += f"   📅 Fecha fin consultas: {op.get('fecha_fin', 'N/A')}\n"
             contexto += f"   📅 Fecha presentación propuestas: {op.get('fecha_presentacion', 'N/A')}\n"
             contexto += f"   🔗 URL SEACE: {op.get('url_seace', 'N/A')}\n"
+
+            # Si hay items detallados, incluirlos
+            items_detalle = op.get('items_detalle', [])
+            if items_detalle:
+                contexto += f"   📦 Items del procedimiento ({len(items_detalle)}):\n"
+                for item in items_detalle:
+                    contexto += f"      - Item {item.get('nro_item', 'N/A')}: {item.get('descripcion', 'N/A')}\n"
+                    contexto += f"        Cantidad: {item.get('cantidad', 'N/A')} {item.get('unidad_medida', '')}\n"
+                    contexto += f"        CUBSO: {item.get('descripcion_cubso', 'N/A')}\n"
+
             if op.get('razones'):
                 contexto += f"   Razones: {', '.join(op.get('razones', []))}\n"
             contexto += "\n"
