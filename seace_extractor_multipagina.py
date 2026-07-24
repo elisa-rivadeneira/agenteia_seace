@@ -60,17 +60,27 @@ def extraer_todas_las_oportunidades():
         print("⏳ Esperando carga inicial completa...")
         time.sleep(15)
 
+        # DEBUG: Guardar screenshot y HTML para diagnóstico
+        try:
+            driver.save_screenshot('/app/debug_screenshot.png')
+            with open('/app/debug_page.html', 'w', encoding='utf-8') as f:
+                f.write(driver.page_source)
+            print("📸 Screenshot y HTML guardados para diagnóstico")
+        except Exception as e:
+            print(f"⚠️ No se pudo guardar debug: {e}")
+
         # Verificar cuántas oportunidades hay en total
         try:
             texto_body = driver.find_element(By.TAG_NAME, "body").text
+            print(f"📝 Primeros 500 caracteres del body:\n{texto_body[:500]}")
             if "Se encontraron" in texto_body:
                 import re
                 match = re.search(r'Se encontraron (\d+) oportunidades', texto_body)
                 if match:
                     total_esperado = int(match.group(1))
                     print(f"📊 Total de oportunidades esperadas: {total_esperado}")
-        except:
-            pass
+        except Exception as e:
+            print(f"⚠️ Error leyendo body: {e}")
         sin_mas_paginas = False
 
         while not sin_mas_paginas:
