@@ -147,9 +147,10 @@ Incluye:
             contexto += f"   📅 Fecha fin consultas: {op.get('fecha_fin', 'N/A')}\n"
             contexto += f"   📅 Fecha presentación propuestas: {op.get('fecha_presentacion', 'N/A')}\n"
 
-            # Si hay items detallados, incluirlos
+            # Si hay items detallados, incluirlos (significa que es una consulta de detalle)
             items_detalle = op.get('items_detalle', [])
             if items_detalle:
+                contexto += f"   🔗 URL SEACE: {op.get('url_seace', 'N/A')}\n"
                 contexto += f"   📦 Items del procedimiento ({len(items_detalle)}):\n"
                 for item in items_detalle:
                     contexto += f"      - Item {item.get('nro_item', 'N/A')}: {item.get('descripcion', 'N/A')}\n"
