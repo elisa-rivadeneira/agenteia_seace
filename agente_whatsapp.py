@@ -423,16 +423,27 @@ _¿Tienes alguna pregunta específica?_"""
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
-        # Si hay agente IA y parece una pregunta sobre oportunidades, usar IA
+        # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
         if self.agente_ia and self.agente_ia.activo:
             # Detectar si pregunta sobre oportunidades
             if any(palabra in mensaje_lower for palabra in [
                 'oportunidad', 'licitacion', 'licitación', 'proceso', 'convocatoria',
                 'cuántas', 'cuantas', 'qué hay', 'que hay', 'mostrar', 'analiza',
-                'recomiend', 'mejor', 'conveniente', 'debería', 'deberia'
+                'recomiend', 'mejor', 'conveniente', 'debería', 'deberia', 'últimas',
+                'ultimas', 'nuevas', 'hoy', 'mes', 'semana'
             ]):
-                # Cargar últimas oportunidades
+                print(f"🔍 Pregunta sobre oportunidades detectada. Escaneando SEACE primero...")
+
+                # ESCANEAR primero para tener datos frescos
                 try:
+                    resultado = subprocess.run(
+                        ['python3', 'seace_extractor_realtime.py'],
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+
+                    # Cargar resultados recién escaneados
                     archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
                     if archivos_json:
                         archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
@@ -441,17 +452,20 @@ _¿Tienes alguna pregunta específica?_"""
                         oportunidades = data.get('oportunidades', [])
 
                         if oportunidades:
-                            print(f"🤖 Respondiendo con IA: {mensaje[:50]}...")
+                            print(f"🤖 Respondiendo con IA sobre {len(oportunidades)} oportunidades: {mensaje[:50]}...")
                             return self.agente_ia.responder_pregunta(mensaje, oportunidades)
+                        else:
+                            return "📊 No se encontraron oportunidades activas en este momento."
+                    else:
+                        return "⚠️ No pude obtener datos de SEACE. Intenta con /escanear"
+
                 except Exception as e:
-                    print(f"⚠️ Error cargando datos para IA: {e}")
+                    print(f"⚠️ Error escaneando para IA: {e}")
+                    return f"❌ Error al buscar oportunidades: {str(e)[:100]}"
 
         # Respuestas básicas sin IA
         if any(palabra in mensaje_lower for palabra in ['hola', 'buenas', 'saludo']):
             return "👋 ¡Hola! Soy tu agente SEACE con IA. Pregúntame sobre oportunidades o usa /ayuda."
-
-        elif any(palabra in mensaje_lower for palabra in ['oportunidades', 'cuántas', 'total']):
-            return f"📊 Actualmente hay {self.estado_monitor['total_oportunidades']} oportunidades. Usa /escanear para actualizar."
 
         elif any(palabra in mensaje_lower for palabra in ['urgente', 'urgent', 'pronto']):
             return "🚨 Para ver oportunidades urgentes usa: /urgentes"
