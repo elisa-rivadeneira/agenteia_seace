@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import undetected_chromedriver as uc
 import json
 import time
 from datetime import datetime
@@ -30,32 +31,20 @@ def extraer_todas_las_oportunidades():
         print("⚠️ No se pudo cargar config_empresa.json")
         config = None
 
-    # Configurar navegador con evasión de detección mejorada
-    options = Options()
+    # Usar undetected-chromedriver para mejor evasión
+    options = uc.ChromeOptions()
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--window-size=1920,1080')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
 
-    # User agent realista
-    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
-
-    # Headers adicionales para evasión
-    options.add_argument('--accept-language=es-PE,es;q=0.9,en;q=0.8')
-    options.add_argument('--accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
-
-    # Usar ChromeDriver del sistema (ya instalado en Dockerfile)
-    service = Service('/usr/bin/chromedriver')
-    driver = webdriver.Chrome(service=service, options=options)
-
-    # Scripts anti-detección adicionales
-    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-        "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-    })
+    # Crear driver con undetected-chromedriver
+    driver = uc.Chrome(
+        options=options,
+        driver_executable_path='/usr/bin/chromedriver',
+        version_main=None,  # Auto-detect
+        use_subprocess=True
+    )
 
     # Aumentar timeout
     wait = WebDriverWait(driver, 45)
