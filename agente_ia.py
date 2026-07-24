@@ -146,7 +146,6 @@ Incluye:
             contexto += f"   📅 Fecha inicio consultas: {op.get('fecha_inicio', 'N/A')}\n"
             contexto += f"   📅 Fecha fin consultas: {op.get('fecha_fin', 'N/A')}\n"
             contexto += f"   📅 Fecha presentación propuestas: {op.get('fecha_presentacion', 'N/A')}\n"
-            contexto += f"   🔗 URL SEACE: {op.get('url_seace', 'N/A')}\n"
 
             # Si hay items detallados, incluirlos
             items_detalle = op.get('items_detalle', [])
