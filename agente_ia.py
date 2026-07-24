@@ -62,8 +62,9 @@ IMPORTANTE:
   📅 Fin consultas: [fecha_fin]
   📅 Presentación propuestas: [fecha_presentacion]
 - NO omitas ninguna de estas 3 fechas, son críticas para la decisión
-- SIEMPRE incluye el valor referencial 💰 cuando des detalles de una oportunidad
+- Si el valor referencial es "---" o no disponible, indica "Valor no publicado (ver en SEACE)"
 - SIEMPRE incluye el enlace directo 🔗 cuando el usuario pida más información específica
+- Explica que el valor referencial completo se encuentra en el enlace de SEACE
 - Sé conciso, profesional y directo
 - Usa emojis para mejor visualización en WhatsApp
 
