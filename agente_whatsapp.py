@@ -443,18 +443,7 @@ _¿Tienes alguna pregunta específica?_"""
                         oportunidades = data.get('oportunidades', [])
 
                         # Buscar la oportunidad por número
-                        # Ordenar igual que como la IA las muestra (por score)
-                        oportunidades_ordenadas = sorted(
-                            oportunidades,
-                            key=lambda x: x.get('score_compatibilidad', 0),
-                            reverse=True
-                        )[:10]  # Top 10 como muestra la IA
-
-                        # El número que pide el usuario es del 1-10 del listado mostrado
-                        if 1 <= numero_oportunidad <= len(oportunidades_ordenadas):
-                            oportunidad = oportunidades_ordenadas[numero_oportunidad - 1]
-                        else:
-                            oportunidad = None
+                        oportunidad = next((op for op in oportunidades if op.get('numero') == numero_oportunidad), None)
 
                         if oportunidad:
                             # Obtener detalle completo con items
