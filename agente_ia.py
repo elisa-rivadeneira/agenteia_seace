@@ -63,8 +63,9 @@ IMPORTANTE:
   📅 Presentación propuestas: [fecha_presentacion]
 - NO omitas ninguna de estas 3 fechas, son críticas para la decisión
 - Si hay items del procedimiento disponibles, SIEMPRE lístalos con detalle
-- SIEMPRE incluye el enlace directo 🔗 cuando el usuario pida más información específica
-- El valor referencial y bases completas están disponibles en el enlace de SEACE
+- SIEMPRE incluye el enlace directo 🔗 SOLO cuando hay items_detalle (consulta de detalle)
+- NUNCA incluyas enlaces genéricos a www.seace.gob.pe en el listado de oportunidades
+- El valor referencial y bases completas están disponibles en el enlace específico de cada oportunidad
 - Sé conciso, profesional y directo
 - Usa emojis para mejor visualización en WhatsApp
 
