@@ -34,9 +34,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY webhook_server.py .
 COPY agente_whatsapp.py .
 COPY whatsapp_notifier.py .
-COPY seace_extractor_multipagina.py .
-COPY seace_extractor_api.py .
-COPY seace_extractor_ocds.py .
+COPY seace_extractor_realtime.py .
 COPY config_empresa.json .
 
 # Create data directory

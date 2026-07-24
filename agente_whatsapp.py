@@ -74,14 +74,14 @@ _Escribe cualquier comando para comenzar_"""
     def comando_escanear(self, args=""):
         """Ejecuta escaneo inmediato"""
         try:
-            print("🔍 Iniciando escaneo SEACE usando API OCDS OECE...")
+            print("🔍 Iniciando escaneo SEACE EN TIEMPO REAL...")
 
-            # Usar el extractor OCDS que descarga datos del mes actual
+            # Usar el extractor de tiempo real (API oficial)
             resultado = subprocess.run(
-                ['python3', 'seace_extractor_ocds.py'],
+                ['python3', 'seace_extractor_realtime.py'],
                 capture_output=True,
                 text=True,
-                timeout=600  # 10 minutos máximo (descarga puede ser grande)
+                timeout=60  # 1 minuto máximo (API rápida)
             )
 
             # Log de depuración
