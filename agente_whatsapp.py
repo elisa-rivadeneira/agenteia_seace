@@ -74,14 +74,14 @@ _Escribe cualquier comando para comenzar_"""
     def comando_escanear(self, args=""):
         """Ejecuta escaneo inmediato"""
         try:
-            print("🔍 Iniciando escaneo SEACE...")
+            print("🔍 Iniciando escaneo SEACE usando API de Datos Abiertos...")
 
-            # Ejecutar extractor
+            # Usar el nuevo extractor basado en API
             resultado = subprocess.run(
-                ['python3', 'seace_extractor_multipagina.py'],
+                ['python3', 'seace_extractor_api.py'],
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minutos máximo
+                timeout=120  # 2 minutos máximo (API es más rápida)
             )
 
             # Log de depuración
