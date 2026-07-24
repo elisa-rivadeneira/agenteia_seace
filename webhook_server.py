@@ -433,6 +433,7 @@ ADMIN_DASHBOARD_HTML = """
             flex: 1;
             overflow-y: auto;
             padding: 20px;
+            max-height: calc(100vh - 200px);
         }
         .message {
             margin-bottom: 12px;
