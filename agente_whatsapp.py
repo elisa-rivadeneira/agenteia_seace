@@ -426,9 +426,9 @@ _¿Tienes alguna pregunta específica?_"""
         # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
         if self.agente_ia and self.agente_ia.activo:
             # Detectar si pide detalle de una oportunidad específica
-            # Acepta: "6", "oportunidad 4", "detalle del 2", "detallame la 2", "info 3"
+            # Acepta: "6", "la 2", "el 4", "oportunidad 4", "detallame la 2", "háblame del 3", "dime sobre el 5"
             import re
-            match_detalle = re.search(r'(?:oportunidad|detalle|detallame|información|info|mas sobre|más sobre)\s+(?:de\s+)?(?:la\s+)?(?:el\s+)?(?:número|numero|#)?\s*(\d+)', mensaje_lower)
+            match_detalle = re.search(r'(?:oportunidad|detalle|detallame|información|info|mas sobre|más sobre|háblame|hablame|dime|cuéntame|cuentame|muéstrame|muestrame|ver|dame)\s+(?:sobre\s+)?(?:de\s+)?(?:la\s+)?(?:el\s+)?(?:número|numero|#)?\s*(\d+)', mensaje_lower)
 
             # También detectar si solo escribe un número (1-10)
             if not match_detalle and re.match(r'^\s*(\d+)\s*$', mensaje):
