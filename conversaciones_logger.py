@@ -10,7 +10,7 @@ from datetime import datetime
 
 CONVERSACIONES_FILE = 'conversaciones_log.json'
 
-def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, tipo_mensaje="texto"):
+def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, nombre_usuario="", tipo_mensaje="texto"):
     """
     Registra una interacción usuario-bot
 
@@ -18,6 +18,7 @@ def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, tipo_mensa
         numero_telefono: Número de WhatsApp del usuario
         mensaje_usuario: Mensaje enviado por el usuario
         respuesta_bot: Respuesta del bot
+        nombre_usuario: Nombre del usuario de WhatsApp (pushName)
         tipo_mensaje: Tipo de mensaje (texto, comando, etc.)
     """
     try:
@@ -32,11 +33,16 @@ def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, tipo_mensa
         if numero_telefono not in data["conversaciones"]:
             data["conversaciones"][numero_telefono] = {
                 "numero": numero_telefono,
+                "nombre": nombre_usuario,
                 "primera_interaccion": datetime.now().isoformat(),
                 "ultima_interaccion": datetime.now().isoformat(),
                 "total_mensajes": 0,
                 "historial": []
             }
+
+        # Actualizar nombre si se proporciona y es diferente
+        if nombre_usuario and data["conversaciones"][numero_telefono].get("nombre") != nombre_usuario:
+            data["conversaciones"][numero_telefono]["nombre"] = nombre_usuario
 
         # Agregar mensaje al historial
         data["conversaciones"][numero_telefono]["historial"].append({

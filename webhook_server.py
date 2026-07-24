@@ -59,8 +59,9 @@ def webhook_evolution(event_type=None):
 
             # Verificar que es un mensaje entrante (no enviado por nosotros)
             if not mensaje_info.get('key', {}).get('fromMe', True):
-                numero_remitente = mensaje_info.get('key', {}).get('remoteJid', '')
+                numero_remitente = mensaje_info.get('key', {}).get('remoteJidAlt') or mensaje_info.get('key', {}).get('remoteJid', '')
                 texto_mensaje = mensaje_info.get('message', {}).get('conversation', '')
+                push_name = mensaje_info.get('pushName', '')
 
                 if texto_mensaje:
                     print(f"💬 Mensaje de {numero_remitente}: {texto_mensaje}")
@@ -71,7 +72,7 @@ def webhook_evolution(event_type=None):
                             respuesta = procesar_mensaje_con_agente(texto_mensaje, numero_remitente)
                             if respuesta:
                                 # Log conversación
-                                log_conversacion(numero_remitente, texto_mensaje, respuesta)
+                                log_conversacion(numero_remitente, texto_mensaje, respuesta, push_name)
                                 enviar_respuesta_automatica(respuesta, numero_remitente)
 
                         thread = threading.Thread(target=procesar_y_responder)
@@ -508,7 +509,10 @@ ADMIN_DASHBOARD_HTML = """
             <div class="conversations-list">
                 {% for numero, conv in conversaciones %}
                 <div class="conversation-item" onclick="loadConversation('{{ numero }}')">
-                    <div class="numero">📱 {{ numero.replace('@s.whatsapp.net', '').replace('+', '') }}</div>
+                    <div class="numero">📱 {{ numero.split('@')[0] }}</div>
+                    {% if conv.get('nombre') %}
+                    <div style="font-size: 12px; color: #666; margin: 3px 0 8px 0;">👤 {{ conv.nombre }}</div>
+                    {% endif %}
                     <div class="meta">
                         <span>{{ conv.ultima_interaccion[11:16] }} - {{ conv.ultima_interaccion[8:10]}}/{{ conv.ultima_interaccion[5:7] }}</span>
                         <span class="badge">{{ conv.total_mensajes }}</span>
@@ -532,10 +536,12 @@ ADMIN_DASHBOARD_HTML = """
                 .then(data => {
                     const chatContent = document.getElementById('chat-content');
                     chatContent.className = '';
-                    const numeroLimpio = numero.replace('@s.whatsapp.net', '').replace('+', '');
+                    const numeroLimpio = numero.split('@')[0];
+                    const nombreHTML = data.nombre ? `<div style="font-size: 14px; color: #667781; margin-top: 3px;">👤 ${data.nombre}</div>` : '';
                     chatContent.innerHTML = `
                         <div class="chat-header">
                             <h2>📱 ${numeroLimpio}</h2>
+                            ${nombreHTML}
                             <div style="font-size: 12px; color: #667781; margin-top: 5px;">
                                 Primera interacción: ${data.primera_interaccion.substring(0, 19)} |
                                 Total mensajes: ${data.total_mensajes}
