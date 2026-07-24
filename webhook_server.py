@@ -25,8 +25,15 @@ agente_seace = None
 def inicializar_agente():
     """Inicializar agente SEACE en thread separado"""
     global agente_seace
-    agente_seace = AgenteWhatsAppSEACE()
-    print("🤖 Agente SEACE inicializado en webhook server")
+    try:
+        print("🔄 Inicializando agente SEACE...")
+        agente_seace = AgenteWhatsAppSEACE()
+        print("🤖 Agente SEACE inicializado en webhook server")
+    except Exception as e:
+        print(f"❌ ERROR al inicializar agente: {e}")
+        import traceback
+        traceback.print_exc()
+        agente_seace = None
 
 @app.route('/webhook', methods=['POST'])
 @app.route('/webhook/<path:event_type>', methods=['POST'])
@@ -193,12 +200,10 @@ def iniciar_servidor():
     print("🚀 INICIANDO WEBHOOK SERVER PARA EVOLUTION API")
     print("=" * 60)
 
-    # Inicializar agente en thread separado
-    thread_agente = threading.Thread(target=inicializar_agente)
-    thread_agente.daemon = True
-    thread_agente.start()
+    # Inicializar agente ANTES de Flask (de forma síncrona para ver errores)
+    inicializar_agente()
 
-    print("🌐 Servidor webhook corriendo en:")
+    print("\n🌐 Servidor webhook corriendo en:")
     print("   http://localhost:5000/webhook")
     print("   http://localhost:5000/status")
     print("   http://localhost:5000/messages")
