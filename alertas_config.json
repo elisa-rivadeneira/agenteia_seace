@@ -1,0 +1,33 @@
+{
+  "horarios": [
+    {
+      "hora": "10:00",
+      "activo": true,
+      "descripcion": "Escaneo matutino"
+    },
+    {
+      "hora": "19:00",
+      "activo": true,
+      "descripcion": "Escaneo vespertino"
+    },
+    {
+      "hora": "09:27",
+      "activo": true,
+      "descripcion": "test"
+    }
+  ],
+  "destinatarios": [
+    {
+      "numero": "51967717179",
+      "nombre": "Usuario Principal",
+      "activo": true,
+      "agregado_el": "2026-07-25T10:00:00"
+    }
+  ],
+  "configuracion": {
+    "score_minimo": 30,
+    "max_oportunidades_por_alerta": 5,
+    "enviar_resumen": true,
+    "enviar_detalles": true
+  }
+}

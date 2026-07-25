@@ -1,0 +1,67 @@
+{
+  "conversaciones": {
+    "51967717179@s.whatsapp.net": {
+      "numero": "51967717179@s.whatsapp.net",
+      "nombre": "Elisa Rivadaneira",
+      "primera_interaccion": "2026-07-24T14:12:03.534332",
+      "ultima_interaccion": "2026-07-24T14:12:03.534585",
+      "total_mensajes": 2,
+      "historial": [
+        {
+          "timestamp": "2026-07-24T14:12:03.534351",
+          "tipo": "texto",
+          "mensaje_usuario": "Hola, quiero información",
+          "respuesta_bot": "Hola! Soy tu agente SEACE"
+        },
+        {
+          "timestamp": "2026-07-24T14:12:03.534582",
+          "tipo": "texto",
+          "mensaje_usuario": "que oportunidades hay?",
+          "respuesta_bot": "Aquí están las mejores oportunidades..."
+        }
+      ]
+    },
+    "51999888777@s.whatsapp.net": {
+      "numero": "51999888777@s.whatsapp.net",
+      "nombre": "Carlos Mendoza",
+      "primera_interaccion": "2026-07-24T14:12:03.534759",
+      "ultima_interaccion": "2026-07-24T14:12:03.534766",
+      "total_mensajes": 1,
+      "historial": [
+        {
+          "timestamp": "2026-07-24T14:12:03.534765",
+          "tipo": "texto",
+          "mensaje_usuario": "Buenos días",
+          "respuesta_bot": "Buenos días! ¿En qué puedo ayudarte?"
+        }
+      ]
+    },
+    "51988776655@s.whatsapp.net": {
+      "numero": "51988776655@s.whatsapp.net",
+      "nombre": "Ana Torres",
+      "primera_interaccion": "2026-07-24T15:30:12.123456",
+      "ultima_interaccion": "2026-07-24T15:32:45.789012",
+      "total_mensajes": 3,
+      "historial": [
+        {
+          "timestamp": "2026-07-24T15:30:12.123456",
+          "tipo": "texto",
+          "mensaje_usuario": "Hola",
+          "respuesta_bot": "¡Hola! Soy tu agente SEACE con IA. Pregúntame sobre oportunidades de licitación."
+        },
+        {
+          "timestamp": "2026-07-24T15:31:20.456789",
+          "tipo": "texto",
+          "mensaje_usuario": "Busco licitaciones de software",
+          "respuesta_bot": "Encontré varias oportunidades de software. Te las muestro..."
+        },
+        {
+          "timestamp": "2026-07-24T15:32:45.789012",
+          "tipo": "texto",
+          "mensaje_usuario": "Gracias!",
+          "respuesta_bot": "De nada! Estoy aquí para ayudarte."
+        }
+      ]
+    }
+  }
+}

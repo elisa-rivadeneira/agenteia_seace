@@ -1,0 +1,29 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "numero": "51967717179",
+      "nombre": "Elisa Rivadaneira",
+      "email": "",
+      "activo": true,
+      "fecha_creacion": "2026-07-25T09:29:53.215742"
+    },
+    {
+      "id": 2,
+      "numero": "51999888777",
+      "nombre": "Carlos Mendoza",
+      "email": "",
+      "activo": true,
+      "fecha_creacion": "2026-07-25T09:29:53.215967"
+    },
+    {
+      "id": 3,
+      "numero": "51988776655",
+      "nombre": "Ana Torres",
+      "email": "",
+      "activo": true,
+      "fecha_creacion": "2026-07-25T09:29:53.216191"
+    }
+  ],
+  "ultima_actualizacion": "2026-07-25T09:29:53.216195"
+}

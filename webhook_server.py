@@ -17,6 +17,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'seace-admin-secret-key-change-this')
 
+# Registrar blueprint de administración
+from admin_routes import admin_bp
+app.register_blueprint(admin_bp)
+
 # Almacenar mensajes recibidos
 mensajes_recibidos = []
 
@@ -141,6 +145,19 @@ def enviar_respuesta_automatica(respuesta: str, numero_destino: str):
     except Exception as e:
         print(f"❌ Error enviando respuesta automática: {e}")
 
+@app.route('/')
+def index():
+    """Landing page"""
+    # Leer y servir landing page
+    with open('landing_page.html', 'r', encoding='utf-8') as f:
+        return f.read()
+
+@app.route('/robots.txt')
+def robots():
+    """Archivo robots.txt para bloquear buscadores"""
+    with open('robots.txt', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'text/plain'}
+
 @app.route('/status', methods=['GET'])
 def status():
     """Estado del webhook server"""
@@ -252,6 +269,122 @@ def admin_conversacion_json(numero):
         return jsonify({'error': 'Not found'}), 404
 
     return jsonify(conversacion)
+
+@app.route('/admin/alertas')
+@require_auth
+def admin_alertas():
+    """Página de configuración de alertas"""
+    from alertas_manager import cargar_config_alertas, obtener_estadisticas_alertas
+    from conversaciones_logger import obtener_todas_conversaciones
+
+    config = cargar_config_alertas()
+    stats = obtener_estadisticas_alertas()
+    conversaciones = obtener_todas_conversaciones()
+
+    # Preparar lista de contactos disponibles
+    contactos = [
+        {
+            'numero': num,
+            'nombre': conv.get('nombre', f"Usuario {num.split('@')[0][-4:]}"),
+            'total_mensajes': conv.get('total_mensajes', 0)
+        }
+        for num, conv in conversaciones.items()
+    ]
+
+    return render_template_string(ADMIN_ALERTAS_HTML,
+                                 config=config,
+                                 stats=stats,
+                                 contactos=contactos)
+
+# API para gestión de alertas
+@app.route('/admin/alertas/destinatario/agregar', methods=['POST'])
+@require_auth
+def agregar_destinatario_alerta():
+    """Agrega destinatario a las alertas"""
+    from alertas_manager import agregar_destinatario
+
+    data = request.json
+    numero = data.get('numero', '')
+    nombre = data.get('nombre', '')
+
+    success = agregar_destinatario(numero, nombre)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/destinatario/eliminar', methods=['POST'])
+@require_auth
+def eliminar_destinatario_alerta():
+    """Elimina destinatario de las alertas"""
+    from alertas_manager import eliminar_destinatario
+
+    data = request.json
+    numero = data.get('numero', '')
+
+    success = eliminar_destinatario(numero)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/destinatario/toggle', methods=['POST'])
+@require_auth
+def toggle_destinatario_alerta():
+    """Activa/desactiva destinatario"""
+    from alertas_manager import activar_desactivar_destinatario
+
+    data = request.json
+    numero = data.get('numero', '')
+    activo = data.get('activo', False)
+
+    success = activar_desactivar_destinatario(numero, activo)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/horario/agregar', methods=['POST'])
+@require_auth
+def agregar_horario_alerta():
+    """Agrega horario de alerta"""
+    from alertas_manager import agregar_horario
+
+    data = request.json
+    hora = data.get('hora', '')
+    descripcion = data.get('descripcion', '')
+
+    success = agregar_horario(hora, descripcion)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/horario/eliminar', methods=['POST'])
+@require_auth
+def eliminar_horario_alerta():
+    """Elimina horario de alerta"""
+    from alertas_manager import eliminar_horario
+
+    data = request.json
+    hora = data.get('hora', '')
+
+    success = eliminar_horario(hora)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/horario/toggle', methods=['POST'])
+@require_auth
+def toggle_horario_alerta():
+    """Activa/desactiva horario"""
+    from alertas_manager import activar_desactivar_horario
+
+    data = request.json
+    hora = data.get('hora', '')
+    activo = data.get('activo', False)
+
+    success = activar_desactivar_horario(hora, activo)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/config/actualizar', methods=['POST'])
+@require_auth
+def actualizar_config_alertas():
+    """Actualiza configuración de alertas"""
+    from alertas_manager import actualizar_configuracion
+
+    data = request.json
+    score_minimo = data.get('score_minimo')
+    max_oportunidades = data.get('max_oportunidades')
+
+    success = actualizar_configuracion(score_minimo, max_oportunidades)
+    return jsonify({'success': success})
 
 # Templates HTML
 LOGIN_HTML = """
@@ -484,7 +617,10 @@ ADMIN_DASHBOARD_HTML = """
 <body>
     <div class="header">
         <h1>🤖 SEACE Bot - Admin Dashboard</h1>
-        <a href="/admin/logout" class="logout">Cerrar sesión</a>
+        <div>
+            <a href="/admin/alertas" style="margin-right: 10px;">⏰ Alertas</a>
+            <a href="/admin/logout" class="logout">Cerrar sesión</a>
+        </div>
     </div>
 
     <div class="main-container">
@@ -690,6 +826,525 @@ CONVERSACION_DETAIL_HTML = """
             {% endfor %}
         </div>
     </div>
+</body>
+</html>
+"""
+
+ADMIN_ALERTAS_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuración de Alertas - SEACE Bot</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 20px; }
+        .header a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+        .horarios-list, .destinatarios-list {
+            list-style: none;
+        }
+        .horario-item, .destinatario-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .horario-item:hover, .destinatario-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+        .horario-info, .destinatario-info {
+            flex: 1;
+        }
+        .horario-hora {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .horario-desc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .destinatario-nombre {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .destinatario-numero {
+            font-size: 12px;
+            color: #666;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-toggle {
+            background: #28a745;
+            color: white;
+        }
+        .btn-toggle.inactive {
+            background: #6c757d;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .add-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .contactos-select {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .contacto-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f2f5;
+            transition: background 0.2s;
+        }
+        .contacto-option:hover {
+            background: #f0f2f5;
+        }
+        .contacto-nombre {
+            font-weight: 600;
+        }
+        .contacto-numero {
+            font-size: 12px;
+            color: #666;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⏰ Configuración de Alertas Automáticas</h1>
+        <div>
+            <a href="/admin">← Dashboard</a>
+            <a href="/admin/logout">Cerrar sesión</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Horarios Activos</div>
+                <div class="value">{{ stats.horarios_activos }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Horarios</div>
+                <div class="value">{{ stats.total_horarios }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Destinatarios Activos</div>
+                <div class="value">{{ stats.destinatarios_activos }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Destinatarios</div>
+                <div class="value">{{ stats.total_destinatarios }}</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>ℹ️ Información:</strong> Las alertas se envían automáticamente en los horarios configurados.
+            Solo se notifican oportunidades nuevas con score ≥ {{ config.configuracion.score_minimo }}%.
+        </div>
+
+        <!-- Horarios de Alerta -->
+        <div class="section">
+            <h2>📅 Horarios de Alerta</h2>
+
+            <ul class="horarios-list">
+                {% for horario in config.horarios %}
+                <li class="horario-item">
+                    <div class="horario-info">
+                        <div class="horario-hora">{{ horario.hora }}</div>
+                        <div class="horario-desc">{{ horario.descripcion }}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="badge {% if horario.activo %}badge-active{% else %}badge-inactive{% endif %}">
+                            {% if horario.activo %}ACTIVO{% else %}INACTIVO{% endif %}
+                        </span>
+                        <button class="btn btn-toggle {% if not horario.activo %}inactive{% endif %}"
+                                onclick="toggleHorario('{{ horario.hora }}', {{ 'false' if horario.activo else 'true' }})">
+                            {% if horario.activo %}Desactivar{% else %}Activar{% endif %}
+                        </button>
+                        <button class="btn btn-delete" onclick="eliminarHorario('{{ horario.hora }}')">Eliminar</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- Formulario agregar horario -->
+            <div class="add-form">
+                <h3 style="margin-bottom: 15px;">➕ Agregar Nuevo Horario</h3>
+                <div class="form-group">
+                    <label>Hora (HH:MM)</label>
+                    <input type="time" id="nueva-hora" placeholder="14:00">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="nueva-hora-desc" placeholder="Ej: Alerta de medio día">
+                </div>
+                <button class="btn btn-primary" onclick="agregarHorario()">Agregar Horario</button>
+            </div>
+        </div>
+
+        <!-- Destinatarios -->
+        <div class="section">
+            <h2>📱 Destinatarios de Alertas</h2>
+
+            <ul class="destinatarios-list">
+                {% for dest in config.destinatarios %}
+                <li class="destinatario-item">
+                    <div class="destinatario-info">
+                        <div class="destinatario-nombre">{{ dest.nombre }}</div>
+                        <div class="destinatario-numero">📞 {{ dest.numero }}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="badge {% if dest.activo %}badge-active{% else %}badge-inactive{% endif %}">
+                            {% if dest.activo %}ACTIVO{% else %}INACTIVO{% endif %}
+                        </span>
+                        <button class="btn btn-toggle {% if not dest.activo %}inactive{% endif %}"
+                                onclick="toggleDestinatario('{{ dest.numero }}', {{ 'false' if dest.activo else 'true' }})">
+                            {% if dest.activo %}Desactivar{% else %}Activar{% endif %}
+                        </button>
+                        <button class="btn btn-delete" onclick="eliminarDestinatario('{{ dest.numero }}')">Eliminar</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- Formulario agregar destinatario -->
+            <div class="add-form">
+                <h3 style="margin-bottom: 15px;">➕ Agregar Nuevo Destinatario</h3>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">Seleccionar de contactos existentes:</label>
+                    <div class="contactos-select">
+                        {% for contacto in contactos %}
+                        <div class="contacto-option" onclick="seleccionarContacto('{{ contacto.numero }}', '{{ contacto.nombre }}')">
+                            <div class="contacto-nombre">{{ contacto.nombre }}</div>
+                            <div class="contacto-numero">{{ contacto.numero }} ({{ contacto.total_mensajes }} mensajes)</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 20px 0;">
+                    <strong>- O -</strong>
+                </div>
+
+                <div class="form-group">
+                    <label>Número de Teléfono</label>
+                    <input type="text" id="nuevo-numero" placeholder="51967717179">
+                </div>
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="nuevo-nombre" placeholder="Nombre del contacto">
+                </div>
+                <button class="btn btn-primary" onclick="agregarDestinatario()">Agregar Destinatario</button>
+            </div>
+        </div>
+
+        <!-- Configuración Avanzada -->
+        <div class="section">
+            <h2>⚙️ Configuración Avanzada</h2>
+
+            <div class="form-group">
+                <label>Score Mínimo de Compatibilidad (%)</label>
+                <input type="number" id="score-minimo" value="{{ config.configuracion.score_minimo }}" min="0" max="100">
+                <small style="color: #666;">Solo se enviarán alertas de oportunidades con este score o superior</small>
+            </div>
+
+            <div class="form-group">
+                <label>Máximo de Oportunidades por Alerta</label>
+                <input type="number" id="max-oportunidades" value="{{ config.configuracion.max_oportunidades_por_alerta }}" min="1" max="20">
+                <small style="color: #666;">Cantidad máxima de oportunidades a notificar en cada alerta</small>
+            </div>
+
+            <button class="btn btn-primary" onclick="guardarConfiguracion()">Guardar Configuración</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleHorario(hora, activo) {
+            fetch('/admin/alertas/horario/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({hora: hora, activo: activo})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al actualizar horario');
+                }
+            });
+        }
+
+        function eliminarHorario(hora) {
+            if (!confirm('¿Eliminar este horario?')) return;
+
+            fetch('/admin/alertas/horario/eliminar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({hora: hora})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar horario');
+                }
+            });
+        }
+
+        function agregarHorario() {
+            const hora = document.getElementById('nueva-hora').value;
+            const descripcion = document.getElementById('nueva-hora-desc').value;
+
+            if (!hora) {
+                alert('Ingresa una hora');
+                return;
+            }
+
+            fetch('/admin/alertas/horario/agregar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({hora: hora, descripcion: descripcion})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al agregar horario (puede que ya exista)');
+                }
+            });
+        }
+
+        function toggleDestinatario(numero, activo) {
+            fetch('/admin/alertas/destinatario/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({numero: numero, activo: activo})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al actualizar destinatario');
+                }
+            });
+        }
+
+        function eliminarDestinatario(numero) {
+            if (!confirm('¿Eliminar este destinatario?')) return;
+
+            fetch('/admin/alertas/destinatario/eliminar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({numero: numero})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar destinatario');
+                }
+            });
+        }
+
+        function seleccionarContacto(numero, nombre) {
+            document.getElementById('nuevo-numero').value = numero.split('@')[0];
+            document.getElementById('nuevo-nombre').value = nombre;
+        }
+
+        function agregarDestinatario() {
+            const numero = document.getElementById('nuevo-numero').value;
+            const nombre = document.getElementById('nuevo-nombre').value;
+
+            if (!numero) {
+                alert('Ingresa un número');
+                return;
+            }
+
+            fetch('/admin/alertas/destinatario/agregar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({numero: numero, nombre: nombre})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al agregar destinatario (puede que ya exista)');
+                }
+            });
+        }
+
+        function guardarConfiguracion() {
+            const scoreMinimo = parseInt(document.getElementById('score-minimo').value);
+            const maxOportunidades = parseInt(document.getElementById('max-oportunidades').value);
+
+            fetch('/admin/alertas/config/actualizar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    score_minimo: scoreMinimo,
+                    max_oportunidades: maxOportunidades
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Configuración guardada');
+                    location.reload();
+                } else {
+                    alert('Error al guardar configuración');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
 """

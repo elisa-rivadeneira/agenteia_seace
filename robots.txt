@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Permitir indexación de buscadores
+# SEACE Bot - Sistema de alertas de licitaciones

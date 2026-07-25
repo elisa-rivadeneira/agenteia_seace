@@ -38,14 +38,24 @@ COPY whatsapp_notifier.py .
 COPY seace_extractor_realtime.py .
 COPY seace_detalle.py .
 COPY conversaciones_logger.py .
+COPY alertas_manager.py .
+COPY scheduler_alertas.py .
+COPY scheduler_alertas_v2.py .
+COPY database_manager.py .
+COPY admin_routes.py .
+COPY admin_templates.py .
+COPY config_paths.py .
 COPY config_empresa.json .
 
-# Create data directory
-RUN mkdir -p /app/data
+# Create data directory for persistent volume
+RUN mkdir -p /data
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
+
+# VOLUME for persistent data (configurar en Easypanel)
+VOLUME ["/data"]
 
 # Expose port
 EXPOSE 5000
@@ -54,5 +64,10 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/status || exit 1
 
-# Run application
-CMD ["python", "-u", "webhook_server.py"]
+COPY landing_page.html .
+COPY robots.txt .
+COPY start_services.sh .
+RUN chmod +x start_services.sh
+
+# Run both webhook server and scheduler
+CMD ["./start_services.sh"]

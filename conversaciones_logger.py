@@ -7,8 +7,7 @@ Guarda todas las interacciones con el bot
 import json
 import os
 from datetime import datetime
-
-CONVERSACIONES_FILE = 'conversaciones_log.json'
+from config_paths import CONVERSACIONES_FILE
 
 def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, nombre_usuario="", tipo_mensaje="texto"):
     """
@@ -23,7 +22,7 @@ def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, nombre_usu
     """
     try:
         # Cargar conversaciones existentes
-        if os.path.exists(CONVERSACIONES_FILE):
+        if CONVERSACIONES_FILE.exists():
             with open(CONVERSACIONES_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         else:
@@ -66,7 +65,7 @@ def log_conversacion(numero_telefono, mensaje_usuario, respuesta_bot, nombre_usu
 def obtener_todas_conversaciones():
     """Obtiene todas las conversaciones"""
     try:
-        if os.path.exists(CONVERSACIONES_FILE):
+        if CONVERSACIONES_FILE.exists():
             with open(CONVERSACIONES_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get("conversaciones", {})

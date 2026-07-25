@@ -34,6 +34,8 @@ requests==2.31.0
 openai==1.54.3
 httpx==0.27.2
 python-dotenv==1.0.0
+schedule==1.2.0
+APScheduler==3.10.4
 ```
 
 ## 📁 Estructura del Proyecto
@@ -45,10 +47,12 @@ seace_buscador/
 ├── agente_ia.py                   # Motor de IA con OpenAI
 ├── seace_extractor_realtime.py    # Extractor de datos SEACE en tiempo real
 ├── whatsapp_notifier.py           # Cliente WhatsApp
+├── scheduler_alertas.py           # Sistema de alertas automáticas (10am y 7pm)
 ├── config_empresa.json            # Configuración de empresa y palabras clave
 ├── requirements.txt               # Dependencias Python
 ├── Dockerfile                     # Configuración Docker
-└── CLAUDE.md                      # Esta documentación
+├── CLAUDE.md                      # Esta documentación
+└── INSTRUCCIONES_ALERTAS.md       # Documentación del sistema de alertas
 ```
 
 ## 🔧 Variables de Entorno
@@ -96,7 +100,21 @@ SEACE_SEGMENTO=43
 - Respuestas automáticas asíncronas
 - Soporte para mensajes conversacionales
 
-### 4. Comandos Disponibles
+### 4. Sistema de Alertas Automáticas ⏰ **NUEVO**
+- **Horarios:** 10:00 AM y 07:00 PM (hora local)
+- **Funcionamiento:**
+  - Escaneo automático de SEACE 2 veces al día
+  - Detección inteligente de oportunidades nuevas
+  - Notificación automática vía Evolution API (WhatsApp)
+  - Historial persistente para evitar duplicados
+- **Filtrado:**
+  - Solo alerta oportunidades con score ≥ 30%
+  - Prioriza las 5 más relevantes por escaneo
+  - Incluye fechas críticas y enlaces directos
+- **Archivo:** `scheduler_alertas.py`
+- **Documentación:** `INSTRUCCIONES_ALERTAS.md`
+
+### 5. Comandos Disponibles
 
 #### Comandos Directos
 - `/escanear` - Escanea SEACE y analiza con IA
@@ -199,7 +217,20 @@ python3 chat_local.py
 
 # Servidor webhook
 python3 webhook_server.py
+
+# Sistema de alertas automáticas
+python3 scheduler_alertas.py
 ```
+
+### Producción con Alertas Automáticas
+Para activar las alertas en el servidor, el Dockerfile debe ejecutar **ambos** servicios:
+
+```dockerfile
+# Ejecutar webhook server y sistema de alertas en paralelo
+CMD python3 webhook_server.py & python3 scheduler_alertas.py
+```
+
+O usar un proceso supervisor (recomendado para producción).
 
 ## 🧪 Testing
 
@@ -216,6 +247,15 @@ python3 seace_extractor_realtime.py
 ### Test del Agente IA
 ```bash
 python3 agente_ia.py
+```
+
+### Test del Sistema de Alertas
+```bash
+# Test con escaneo inmediato
+python3 test_alertas.py
+
+# Ver próximos horarios programados
+python3 scheduler_alertas.py
 ```
 
 ### Ver Logs de Producción
@@ -292,6 +332,7 @@ git push origin main
 - **v2.2** - Corrección formato WhatsApp markdown
 - **v2.3** - Links directos a SEACE
 - **v2.4** - Optimización de prompts y fechas críticas
+- **v2.5** - Sistema de alertas automáticas (10am y 7pm) con detección de oportunidades nuevas
 
 ## 🔐 Seguridad
 
