@@ -301,7 +301,7 @@ def admin_alertas():
     return render_template_string(ADMIN_ALERTAS_HTML,
                                  config=config,
                                  stats=stats,
-                                 contactos=contactos)
+                                 usuarios=contactos)
 
 # API para gestión de alertas
 @app.route('/admin/alertas/destinatario/agregar', methods=['POST'])
@@ -391,6 +391,90 @@ def actualizar_config_alertas():
     max_oportunidades = data.get('max_oportunidades')
 
     success = actualizar_configuracion(score_minimo, max_oportunidades)
+    return jsonify({'success': success})
+
+@app.route('/admin/usuarios/agregar-manual', methods=['POST'])
+@require_auth
+def agregar_usuario_manual():
+    """Agrega usuario manualmente al sistema"""
+    from conversaciones_logger import registrar_usuario_manual
+
+    data = request.json
+    numero = data.get('numero')
+    nombre = data.get('nombre')
+
+    if not numero or not nombre:
+        return jsonify({'success': False, 'error': 'Faltan datos'})
+
+    success = registrar_usuario_manual(numero, nombre)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/crear', methods=['POST'])
+@require_auth
+def crear_alerta_endpoint():
+    """Crea una nueva alerta"""
+    from database_manager import crear_alerta
+
+    data = request.json
+    nombre = data.get('nombre')
+    segmento = data.get('segmento')
+    horarios = data.get('horarios', [])
+    dias_semana = data.get('dias_semana', [])
+    usuarios = data.get('usuarios', [])
+    score_minimo = data.get('score_minimo', 30)
+    max_oportunidades = data.get('max_oportunidades', 5)
+
+    if not nombre or not segmento or not horarios or not dias_semana or not usuarios:
+        return jsonify({'success': False, 'error': 'Faltan campos obligatorios'})
+
+    success = crear_alerta(nombre, segmento, horarios, dias_semana, usuarios, score_minimo, max_oportunidades)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/actualizar', methods=['POST'])
+@require_auth
+def actualizar_alerta_endpoint():
+    """Actualiza una alerta existente"""
+    from database_manager import actualizar_alerta
+
+    data = request.json
+    alerta_id = data.get('id')
+    datos = data.get('datos', {})
+
+    if not alerta_id:
+        return jsonify({'success': False, 'error': 'Falta ID de alerta'})
+
+    success = actualizar_alerta(alerta_id, datos)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/eliminar', methods=['POST'])
+@require_auth
+def eliminar_alerta_endpoint():
+    """Elimina una alerta"""
+    from database_manager import eliminar_alerta
+
+    data = request.json
+    alerta_id = data.get('id')
+
+    if not alerta_id:
+        return jsonify({'success': False, 'error': 'Falta ID de alerta'})
+
+    success = eliminar_alerta(alerta_id)
+    return jsonify({'success': success})
+
+@app.route('/admin/alertas/toggle', methods=['POST'])
+@require_auth
+def toggle_alerta_endpoint():
+    """Activa o desactiva una alerta"""
+    from database_manager import activar_desactivar_alerta
+
+    data = request.json
+    alerta_id = data.get('id')
+    activo = data.get('activo', False)
+
+    if not alerta_id:
+        return jsonify({'success': False, 'error': 'Falta ID de alerta'})
+
+    success = activar_desactivar_alerta(alerta_id, activo)
     return jsonify({'success': success})
 
 # Templates HTML

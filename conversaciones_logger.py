@@ -79,6 +79,45 @@ def obtener_conversacion(numero_telefono):
     conversaciones = obtener_todas_conversaciones()
     return conversaciones.get(numero_telefono, None)
 
+def registrar_usuario_manual(numero_telefono, nombre_usuario):
+    """
+    Registra un usuario manualmente (para alertas)
+
+    Args:
+        numero_telefono: Número de WhatsApp (formato: 51912345678@s.whatsapp.net)
+        nombre_usuario: Nombre del usuario/cliente
+
+    Returns:
+        bool: True si se registró exitosamente
+    """
+    try:
+        if CONVERSACIONES_FILE.exists():
+            with open(CONVERSACIONES_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {"conversaciones": {}}
+
+        if numero_telefono not in data["conversaciones"]:
+            data["conversaciones"][numero_telefono] = {
+                "numero": numero_telefono,
+                "nombre": nombre_usuario,
+                "primera_interaccion": datetime.now().isoformat(),
+                "ultima_interaccion": datetime.now().isoformat(),
+                "total_mensajes": 0,
+                "historial": [],
+                "origen": "manual"
+            }
+
+            with open(CONVERSACIONES_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+            return True
+        return False
+
+    except Exception as e:
+        print(f"Error registrando usuario manual: {e}")
+        return False
+
 def obtener_estadisticas():
     """Obtiene estadísticas generales"""
     conversaciones = obtener_todas_conversaciones()

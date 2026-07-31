@@ -484,6 +484,7 @@ _¿Tienes alguna pregunta específica?_"""
                 # /excel 10 - Top N oportunidades
                 if args_lower.isdigit():
                     limite = int(args_lower)
+                    oportunidades_exportadas = oportunidades_ordenadas[:limite]
                     excel_path = generator.generar_excel_top_relevantes(oportunidades_ordenadas, limite=limite)
                     caption = f"📊 Top {limite} Oportunidades SEACE (ordenadas por fecha de presentación)"
 
@@ -500,6 +501,7 @@ _Ejemplos:_
 • /excel 5 ← Solo las 5 más urgentes"""
             else:
                 # Por defecto: TODAS las oportunidades
+                oportunidades_exportadas = oportunidades_ordenadas
                 excel_path = generator.generar_excel_oportunidades(oportunidades_ordenadas)
                 caption = f"📊 TODAS las oportunidades del segmento 43 ({len(oportunidades)} total)\n⏰ Ordenadas por fecha de presentación"
 
@@ -513,7 +515,8 @@ _Ejemplos:_
 
             if success:
                 print("📊 ✅ Archivo enviado exitosamente!")
-                return f"✅ Excel enviado exitosamente\n📁 {os.path.basename(excel_path)}\n📊 {len([op for op in oportunidades if op.get('score_compatibilidad', 0) >= 30])} oportunidades incluidas"
+                alta_compatibilidad = len([op for op in oportunidades_exportadas if op.get('score_compatibilidad', 0) >= 30])
+                return f"✅ Excel enviado exitosamente\n📁 {os.path.basename(excel_path)}\n📊 {len(oportunidades_exportadas)} oportunidades incluidas ({alta_compatibilidad} con compatibilidad ≥30%)"
             else:
                 print("📊 ❌ Error al enviar archivo")
                 return f"❌ Error enviando Excel. Archivo generado en:\n{excel_path}"

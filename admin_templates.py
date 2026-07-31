@@ -624,6 +624,13 @@ ALERTAS_HTML = """
 
                 <div class="form-group">
                     <label>Usuarios que recibirán alertas *</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="nuevoUsuarioNombre" placeholder="Nombre del usuario" style="flex: 1;">
+                        <input type="text" id="nuevoUsuarioNumero" placeholder="+51912345678" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="agregarUsuarioManual()" style="padding: 8px 15px;">
+                            ➕ Agregar
+                        </button>
+                    </div>
                     <select id="alertaUsuarios" multiple style="height: 150px;">
                         {% for usuario in usuarios %}
                         <option value="{{ usuario.numero }}">{{ usuario.nombre }} ({{ usuario.numero }})</option>
@@ -698,6 +705,75 @@ ALERTAS_HTML = """
                     <span onclick="eliminarHorario('${h}')" style="cursor: pointer; font-weight: bold;">&times;</span>
                 </div>
             `).join('');
+        }
+
+        async function agregarUsuarioManual() {
+            const nombre = document.getElementById('nuevoUsuarioNombre').value.trim();
+            const numero = document.getElementById('nuevoUsuarioNumero').value.trim();
+
+            if (!nombre || !numero) {
+                alert('Por favor completa nombre y número');
+                return;
+            }
+
+            // Validar formato de número (debe incluir código de país)
+            if (!numero.match(/^\+?\d{10,15}$/)) {
+                alert('Número inválido. Formato: +51912345678');
+                return;
+            }
+
+            // Formatear número al formato WhatsApp (con @s.whatsapp.net si no lo tiene)
+            let numeroFormateado = numero.replace(/[^\d]/g, '');
+            if (!numero.includes('@')) {
+                numeroFormateado = numeroFormateado + '@s.whatsapp.net';
+            }
+
+            // Agregar al select
+            const select = document.getElementById('alertaUsuarios');
+
+            // Verificar si ya existe
+            for (let option of select.options) {
+                if (option.value === numeroFormateado) {
+                    alert('Este usuario ya está en la lista');
+                    return;
+                }
+            }
+
+            // Guardar en el servidor
+            try {
+                const response = await fetch('/admin/usuarios/agregar-manual', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        numero: numeroFormateado,
+                        nombre: nombre
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert('Error guardando usuario en el servidor');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión al guardar usuario');
+                return;
+            }
+
+            // Crear nueva opción en el select
+            const option = document.createElement('option');
+            option.value = numeroFormateado;
+            option.text = `${nombre} (${numero})`;
+            option.selected = true;
+            select.add(option);
+
+            // Limpiar inputs
+            document.getElementById('nuevoUsuarioNombre').value = '';
+            document.getElementById('nuevoUsuarioNumero').value = '';
+
+            alert(`✅ Usuario agregado: ${nombre}`);
         }
 
         document.getElementById('formAlerta').onsubmit = function(e) {
