@@ -430,11 +430,16 @@ _¿Tienes alguna pregunta específica?_"""
 
     def comando_excel(self, args=""):
         """Genera y envía reporte Excel de oportunidades"""
+        print("📊 ========== COMANDO EXCEL INICIADO ==========")
+        print(f"📊 Args recibidos: '{args}'")
+
         try:
             from excel_generator import ExcelGeneratorSEACE
+            print("📊 Módulo excel_generator importado correctamente")
 
             archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
             if not archivos_json:
+                print("📊 ❌ No hay archivos JSON de oportunidades")
                 return "❌ No hay datos disponibles. Usa /escanear primero para generar información."
 
             archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
@@ -465,14 +470,19 @@ _¿Tienes alguna pregunta específica?_"""
                 excel_path = generator.generar_excel_top_relevantes(oportunidades, limite=10)
                 caption = "📊 Top 10 Oportunidades SEACE más relevantes"
 
+            print(f"📊 Intentando enviar archivo: {excel_path}")
+            print(f"📊 Caption: {caption}")
+
             success = self.notifier.send_file_via_evolution(
                 file_path=excel_path,
                 caption=caption
             )
 
             if success:
+                print("📊 ✅ Archivo enviado exitosamente!")
                 return f"✅ Excel enviado exitosamente\n📁 {os.path.basename(excel_path)}\n📊 {len([op for op in oportunidades if op.get('score_compatibilidad', 0) >= 30])} oportunidades incluidas"
             else:
+                print("📊 ❌ Error al enviar archivo")
                 return f"❌ Error enviando Excel. Archivo generado en:\n{excel_path}"
 
         except Exception as e:
@@ -485,15 +495,19 @@ _¿Tienes alguna pregunta específica?_"""
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
-        # PRIORIDAD 1: Detectar si pide Excel (ANTES de la IA)
-        if any(palabra in mensaje_lower for palabra in ['excel', 'exportar', 'exporta', 'descarga']):
-            print(f"📊 Solicitud de Excel detectada: {mensaje[:50]}...")
+        # PRIORIDAD MÁXIMA: Detectar Excel PRIMERO
+        palabras_excel = ['excel', 'exportar', 'exporta', 'descarga', 'xls', 'xlsx']
+        if any(palabra in mensaje_lower for palabra in palabras_excel):
+            print(f"📊 ✅ EXCEL DETECTADO: '{mensaje[:80]}...'")
+            print(f"📊 Ejecutando comando_excel() directamente")
             return self.comando_excel("")
 
-        # PRIORIDAD 2: Si pide archivo y menciona oportunidades
-        if 'archivo' in mensaje_lower and any(p in mensaje_lower for p in ['oportunidad', 'licitacion', 'licitación']):
-            print(f"📊 Solicitud de archivo de oportunidades detectada")
-            return self.comando_excel("")
+        # PRIORIDAD ALTA: Detectar "envíame/mándame archivo"
+        if any(verbo in mensaje_lower for verbo in ['envíame', 'enviame', 'mándame', 'mandame', 'envía', 'envia', 'manda']):
+            if any(sustantivo in mensaje_lower for sustantivo in ['archivo', 'documento', 'reporte', 'hoja']):
+                print(f"📊 ✅ SOLICITUD DE ARCHIVO DETECTADA: '{mensaje[:80]}...'")
+                print(f"📊 Ejecutando comando_excel() directamente")
+                return self.comando_excel("")
 
         # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
         if self.agente_ia and self.agente_ia.activo:
