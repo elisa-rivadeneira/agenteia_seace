@@ -134,32 +134,42 @@ class WhatsAppNotifier:
         clean_number = (number or self.whatsapp_number).replace('+', '').replace(' ', '')
 
         try:
+            print(f"📤 Preparando envío de archivo: {file_path}")
+            print(f"📤 Tamaño archivo: {os.path.getsize(file_path)} bytes")
+            print(f"📤 URL: {url}")
+            print(f"📤 Número destino: {clean_number}")
+
             with open(file_path, 'rb') as file:
                 files = {
-                    'mediaMessage': file
+                    'mediaMessage': (os.path.basename(file_path), file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 }
 
                 data = {
                     'number': clean_number,
-                    'mediatype': 'document',
-                    'fileName': os.path.basename(file_path),
+                    'mediatype': 'document'
                 }
 
                 if caption:
                     data['caption'] = caption
 
+                print(f"📤 Enviando request a Evolution API...")
                 response = requests.post(url, headers=headers, data=data, files=files)
 
-                if response.status_code == 201:
+                print(f"📤 Status Code: {response.status_code}")
+                print(f"📤 Response: {response.text[:500]}")
+
+                if response.status_code in [200, 201]:
                     print(f"✅ Archivo enviado: {os.path.basename(file_path)}")
                     return True
                 else:
                     print(f"❌ Error enviando archivo: {response.status_code}")
-                    print(f"   Respuesta: {response.text}")
+                    print(f"   Respuesta completa: {response.text}")
                     return False
 
         except Exception as e:
             print(f"❌ Error enviando archivo por Evolution API: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def send_via_twilio(self, message: str, number: str = None) -> bool:
