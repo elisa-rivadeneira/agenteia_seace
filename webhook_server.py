@@ -96,7 +96,7 @@ def procesar_mensaje_con_agente(mensaje: str, numero: str):
         print(f"🧠 Procesando con agente: {mensaje}")
 
         # Usar el procesador del agente que integra IA
-        respuesta = agente_seace.procesar_comando(mensaje)
+        respuesta = agente_seace.procesar_comando(mensaje, numero_usuario=numero)
         return respuesta
 
     except Exception as e:

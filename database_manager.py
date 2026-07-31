@@ -50,7 +50,7 @@ def guardar_usuarios(usuarios: List[Dict]) -> bool:
         print(f"Error guardando usuarios: {e}")
         return False
 
-def agregar_usuario(numero: str, nombre: str, email: str = "") -> bool:
+def agregar_usuario(numero: str, nombre: str, email: str = "", segmentos: List[str] = None) -> bool:
     """Agrega un nuevo usuario"""
     usuarios = cargar_usuarios()
 
@@ -64,8 +64,14 @@ def agregar_usuario(numero: str, nombre: str, email: str = "") -> bool:
         "numero": numero,
         "nombre": nombre,
         "email": email,
+        "segmentos": segmentos or ["43"],
+        "score_minimo": 30,
+        "max_oportunidades": 5,
+        "horarios_alerta": ["10:00", "19:00"],
+        "palabras_clave_custom": [],
         "activo": True,
-        "fecha_creacion": datetime.now().isoformat()
+        "fecha_creacion": datetime.now().isoformat(),
+        "configurado": False
     }
 
     usuarios.append(nuevo_usuario)
@@ -101,6 +107,66 @@ def obtener_usuarios_activos() -> List[Dict]:
     """Obtiene solo usuarios activos"""
     usuarios = cargar_usuarios()
     return [u for u in usuarios if u.get('activo', False)]
+
+def configurar_segmentos_usuario(numero: str, segmentos: List[str]) -> bool:
+    """Configura los segmentos de interés de un usuario"""
+    return actualizar_usuario(numero, {
+        'segmentos': segmentos,
+        'configurado': True
+    })
+
+def obtener_segmentos_usuario(numero: str) -> List[str]:
+    """Obtiene los segmentos configurados de un usuario"""
+    usuario = obtener_usuario(numero)
+    if usuario:
+        return usuario.get('segmentos', ['43'])
+    return ['43']
+
+def agregar_segmento_usuario(numero: str, segmento: str) -> bool:
+    """Agrega un segmento a la configuración del usuario"""
+    usuario = obtener_usuario(numero)
+    if not usuario:
+        return False
+
+    segmentos = usuario.get('segmentos', [])
+    if segmento not in segmentos:
+        segmentos.append(segmento)
+        return configurar_segmentos_usuario(numero, segmentos)
+    return True
+
+def remover_segmento_usuario(numero: str, segmento: str) -> bool:
+    """Remueve un segmento de la configuración del usuario"""
+    usuario = obtener_usuario(numero)
+    if not usuario:
+        return False
+
+    segmentos = usuario.get('segmentos', [])
+    if segmento in segmentos and len(segmentos) > 1:  # Mantener al menos 1
+        segmentos.remove(segmento)
+        return configurar_segmentos_usuario(numero, segmentos)
+    return False
+
+# Catálogo de segmentos SEACE
+SEGMENTOS_SEACE = {
+    "43": "Tecnologías de la Información",
+    "80": "Servicios profesionales y consultoría",
+    "81": "Investigación y desarrollo",
+    "72": "Arquitectura e ingeniería",
+    "42": "Equipos médicos y laboratorio",
+    "44": "Equipos de oficina y computación",
+    "45": "Equipos de telecomunicaciones",
+    "76": "Servicios de limpieza",
+    "77": "Servicios de seguridad",
+    "78": "Servicios de mantenimiento"
+}
+
+def obtener_catalogo_segmentos() -> Dict[str, str]:
+    """Retorna el catálogo completo de segmentos SEACE"""
+    return SEGMENTOS_SEACE
+
+def obtener_nombre_segmento(codigo: str) -> str:
+    """Obtiene el nombre de un segmento por su código"""
+    return SEGMENTOS_SEACE.get(codigo, f"Segmento {codigo}")
 
 # ===== GESTIÓN DE ALERTAS =====
 

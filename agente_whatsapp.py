@@ -49,7 +49,10 @@ class AgenteWhatsAppSEACE:
             '/parar': self.comando_parar,
             '/estadisticas': self.comando_estadisticas,
             '/filtrar': self.comando_filtrar,
-            '/excel': self.comando_excel
+            '/excel': self.comando_excel,
+            '/configurar': self.comando_configurar,
+            '/missegmentos': self.comando_mis_segmentos,
+            '/agregarsegmento': self.comando_agregar_segmento
         }
 
         self.estado_monitor = {
@@ -355,6 +358,11 @@ _Usa /reporte para ver detalles completos_"""
 • `/excel` - Exportar a Excel
 • `/estado` - Estado del sistema
 
+⚙️ *CONFIGURACIÓN PERSONAL:*
+• `/configurar` - Seleccionar segmentos SEACE
+• `/missegmentos` - Ver tus segmentos activos
+• `/agregarsegmento <código>` - Agregar un segmento
+
 📊 *ANÁLISIS Y EXPORTACIÓN:*
 • `/estadisticas` - Métricas detalladas
 • `/filtrar [score]` - Filtrar por score mínimo
@@ -527,6 +535,113 @@ _Ejemplos:_
             traceback.print_exc()
             return f"❌ Error generando Excel: {str(e)[:150]}"
 
+    def comando_configurar(self, args="", numero_usuario=None):
+        """Configuración interactiva de segmentos"""
+        from database_manager import obtener_catalogo_segmentos, obtener_segmentos_usuario, configurar_segmentos_usuario
+
+        if not numero_usuario:
+            return "❌ Error: No se pudo identificar el usuario"
+
+        catalogo = obtener_catalogo_segmentos()
+
+        if not args.strip():
+            # Mostrar catálogo
+            segmentos_actuales = obtener_segmentos_usuario(numero_usuario)
+            segmentos_texto = '\n'.join([
+                f"{'✅' if codigo in segmentos_actuales else '⬜'} *{codigo}* - {nombre}"
+                for codigo, nombre in sorted(catalogo.items())
+            ])
+
+            return f"""⚙️ *CONFIGURAR SEGMENTOS*
+
+Tus segmentos actuales: *{', '.join(segmentos_actuales)}*
+
+*Segmentos disponibles:*
+{segmentos_texto}
+
+*Para configurar*, envía:
+`/configurar 43,80,81`
+
+_Separa los códigos con comas_
+Ejemplo: `/configurar 43,45` para Tecnologías de la Información + Telecomunicaciones"""
+
+        # Procesar configuración
+        try:
+            codigos = [c.strip() for c in args.split(',')]
+            validos = [c for c in codigos if c in catalogo]
+
+            if not validos:
+                return "❌ No se encontraron segmentos válidos. Usa `/configurar` para ver la lista."
+
+            if configurar_segmentos_usuario(numero_usuario, validos):
+                nombres = [f"*{c}* - {catalogo[c]}" for c in validos]
+                return f"""✅ *Configuración actualizada*
+
+Tus nuevos segmentos:
+{chr(10).join(nombres)}
+
+Ahora recibirás alertas de estos segmentos."""
+            else:
+                return "❌ Error al guardar configuración. Intenta de nuevo."
+
+        except Exception as e:
+            return f"❌ Error: {str(e)[:100]}\n\nUso: `/configurar 43,80,81`"
+
+    def comando_mis_segmentos(self, args="", numero_usuario=None):
+        """Muestra los segmentos configurados del usuario"""
+        from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento
+
+        if not numero_usuario:
+            return "❌ Error: No se pudo identificar el usuario"
+        segmentos = obtener_segmentos_usuario(numero_usuario)
+
+        if not segmentos:
+            return """⚠️ No tienes segmentos configurados
+
+Usa `/configurar` para seleccionar tus segmentos de interés."""
+
+        lista = '\n'.join([
+            f"• *{codigo}* - {obtener_nombre_segmento(codigo)}"
+            for codigo in segmentos
+        ])
+
+        return f"""📋 *TUS SEGMENTOS ACTIVOS*
+
+{lista}
+
+Total: {len(segmentos)} segmentos
+
+Usa `/configurar` para modificarlos"""
+
+    def comando_agregar_segmento(self, args="", numero_usuario=None):
+        """Agrega un segmento sin reemplazar los existentes"""
+        from database_manager import agregar_segmento_usuario, obtener_catalogo_segmentos, obtener_nombre_segmento
+
+        if not numero_usuario:
+            return "❌ Error: No se pudo identificar el usuario"
+
+        if not args.strip():
+            return """❌ Debes especificar el código del segmento
+
+Ejemplo: `/agregarsegmento 80`
+
+Usa `/configurar` para ver todos los segmentos disponibles"""
+
+        codigo = args.strip()
+        catalogo = obtener_catalogo_segmentos()
+
+        if codigo not in catalogo:
+            return f"❌ Segmento *{codigo}* no encontrado\n\nUsa `/configurar` para ver la lista completa"
+
+        if agregar_segmento_usuario(numero_usuario, codigo):
+            return f"""✅ Segmento agregado
+
+*{codigo}* - {obtener_nombre_segmento(codigo)}
+
+Usa `/missegmentos` para ver todos tus segmentos activos"""
+        else:
+            return f"⚠️ El segmento *{codigo}* ya estaba en tu lista"
+
     def procesar_mensaje_libre(self, mensaje: str) -> str:
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
@@ -668,7 +783,7 @@ _Ejemplos:_
 
 Usa /ayuda para ver todos los comandos."""
 
-    def procesar_comando(self, mensaje: str) -> str:
+    def procesar_comando(self, mensaje: str, numero_usuario: str = None) -> str:
         """Procesa un mensaje y devuelve respuesta"""
         mensaje = mensaje.strip()
 
@@ -687,7 +802,11 @@ Usa /ayuda para ver todos los comandos."""
 
             if comando in self.comandos:
                 try:
-                    respuesta = self.comandos[comando](args)
+                    # Comandos que necesitan numero_usuario
+                    if comando in ['/configurar', '/missegmentos', '/agregarsegmento']:
+                        respuesta = self.comandos[comando](args, numero_usuario=numero_usuario)
+                    else:
+                        respuesta = self.comandos[comando](args)
                 except Exception as e:
                     respuesta = f"❌ Error ejecutando {comando}: {str(e)[:100]}"
             else:
