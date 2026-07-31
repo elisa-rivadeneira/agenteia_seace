@@ -24,11 +24,11 @@ class WhatsAppNotifier:
 
         # Configuración de APIs (a completar por el usuario)
         self.api_config = {
-                        'evolution': {
+            'evolution': {
                 'enabled': True,
-                'base_url': 'https://automation-evolution-api.gnrjtm.easypanel.host',
-                'instance': 'Elisa Rivadeneira',
-                'api_key': '429683C4C977415CAAFCCE10F7D57E11'
+                'base_url': os.getenv('EVOLUTION_API_URL', 'https://automation-evolution-api.gnrjtm.easypanel.host'),
+                'instance': os.getenv('EVOLUTION_INSTANCE_NAME', 'service_reloaded_otronumber'),
+                'api_key': os.getenv('EVOLUTION_API_KEY', '5DD598ABD764-474E-BCA4-53B1AC9FD4BD')
             },
             'twilio': {
                 'enabled': False,
