@@ -48,7 +48,8 @@ class AgenteWhatsAppSEACE:
             '/inicio': self.comando_inicio,
             '/parar': self.comando_parar,
             '/estadisticas': self.comando_estadisticas,
-            '/filtrar': self.comando_filtrar
+            '/filtrar': self.comando_filtrar,
+            '/excel': self.comando_excel
         }
 
         self.estado_monitor = {
@@ -79,6 +80,7 @@ class AgenteWhatsAppSEACE:
 • /escanear - Buscar oportunidades ahora
 • /reporte - Reporte completo actual
 • /urgentes - Solo oportunidades urgentes
+• /excel - Exportar a Excel y enviar archivo
 • /estado - Estado del sistema
 • /estadisticas - Métricas del monitor
 • /config - Configuración actual
@@ -351,11 +353,15 @@ _Usa /reporte para ver detalles completos_"""
 • `/escanear` - Buscar oportunidades ahora
 • `/reporte` - Reporte completo actual
 • `/urgentes` - Solo oportunidades urgentes
+• `/excel` - Exportar a Excel
 • `/estado` - Estado del sistema
 
-📊 *ANÁLISIS:*
+📊 *ANÁLISIS Y EXPORTACIÓN:*
 • `/estadisticas` - Métricas detalladas
 • `/filtrar [score]` - Filtrar por score mínimo
+• `/excel` - Top 10 en Excel
+• `/excel 30` - Score ≥30% en Excel
+• `/excel top 5` - Top 5 en Excel
 
 ⚙️ *SISTEMA:*
 • `/config` - Ver configuración
@@ -371,7 +377,9 @@ _Usa /reporte para ver detalles completos_"""
 🤖 *EJEMPLOS:*
 • "/urgentes" → Oportunidades que vencen pronto
 • "/filtrar 50" → Solo oportunidades >50% score
+• "/excel" → Envía Excel con top 10
 • "¿Cuántas oportunidades hay?" → Consulta libre
+• "Envíame un Excel" → El agente te enviará el archivo
 
 _¿Tienes alguna pregunta específica?_"""
 
@@ -419,6 +427,59 @@ _¿Tienes alguna pregunta específica?_"""
         """Para el sistema"""
         self.estado_monitor['activo'] = False
         return "🔴 Sistema pausado. Usa /inicio para reactivar."
+
+    def comando_excel(self, args=""):
+        """Genera y envía reporte Excel de oportunidades"""
+        try:
+            from excel_generator import ExcelGeneratorSEACE
+
+            archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
+            if not archivos_json:
+                return "❌ No hay datos disponibles. Usa /escanear primero para generar información."
+
+            archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
+
+            with open(archivo_mas_reciente, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            oportunidades = data.get('oportunidades', [])
+
+            if not oportunidades:
+                return "❌ No hay oportunidades para exportar."
+
+            generator = ExcelGeneratorSEACE()
+
+            if args.strip():
+                try:
+                    score_min = int(args.strip())
+                    excel_path = generator.generar_excel_filtrado(oportunidades, score_minimo=score_min)
+                    caption = f"📊 Oportunidades SEACE con compatibilidad ≥ {score_min}%"
+                except ValueError:
+                    if args.strip().lower().startswith('top'):
+                        limite = int(args.strip().split()[-1]) if len(args.strip().split()) > 1 else 10
+                        excel_path = generator.generar_excel_top_relevantes(oportunidades, limite=limite)
+                        caption = f"📊 Top {limite} Oportunidades SEACE más relevantes"
+                    else:
+                        return "❌ Uso: /excel [score_minimo] o /excel top [cantidad]\nEjemplos:\n• /excel 30\n• /excel top 5"
+            else:
+                excel_path = generator.generar_excel_top_relevantes(oportunidades, limite=10)
+                caption = "📊 Top 10 Oportunidades SEACE más relevantes"
+
+            success = self.notifier.send_file_via_evolution(
+                file_path=excel_path,
+                caption=caption
+            )
+
+            if success:
+                return f"✅ Excel enviado exitosamente\n📁 {os.path.basename(excel_path)}\n📊 {len([op for op in oportunidades if op.get('score_compatibilidad', 0) >= 30])} oportunidades incluidas"
+            else:
+                return f"❌ Error enviando Excel. Archivo generado en:\n{excel_path}"
+
+        except Exception as e:
+            import traceback
+            print(f"❌ Error generando Excel: {e}")
+            traceback.print_exc()
+            return f"❌ Error generando Excel: {str(e)[:150]}"
 
     def procesar_mensaje_libre(self, mensaje: str) -> str:
         """Procesa mensajes libres (no comandos)"""
@@ -481,6 +542,14 @@ _¿Tienes alguna pregunta específica?_"""
                     import traceback
                     traceback.print_exc()
                     return f"❌ Error obteniendo detalle: {str(e)[:100]}"
+
+            # Detectar si pide Excel
+            if any(palabra in mensaje_lower for palabra in [
+                'excel', 'exportar', 'exporta', 'descarga', 'archivo', 'hoja de calculo',
+                'hoja de cálculo', 'envíame', 'enviame', 'manda', 'envía', 'envia'
+            ]):
+                # Si menciona Excel, ejecutar comando /excel directamente
+                return self.comando_excel("")
 
             # Detectar si pregunta sobre oportunidades en general
             if any(palabra in mensaje_lower for palabra in [

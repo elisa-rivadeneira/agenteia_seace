@@ -105,6 +105,63 @@ class WhatsAppNotifier:
             print(f"Error enviando por Evolution API: {e}")
             return False
 
+    def send_file_via_evolution(self, file_path: str, number: str = None, caption: str = None) -> bool:
+        """
+        Envía archivo (Excel, PDF, etc.) vía Evolution API
+
+        Args:
+            file_path: Ruta del archivo a enviar
+            number: Número de destino
+            caption: Texto de acompañamiento
+
+        Returns:
+            bool: True si se envió correctamente
+        """
+        if not self.api_config['evolution']['enabled']:
+            return False
+
+        if not os.path.exists(file_path):
+            print(f"❌ Archivo no encontrado: {file_path}")
+            return False
+
+        config = self.api_config['evolution']
+        url = f"{config['base_url']}/message/sendMedia/{config['instance']}"
+
+        headers = {
+            'apikey': config['api_key']
+        }
+
+        clean_number = (number or self.whatsapp_number).replace('+', '').replace(' ', '')
+
+        try:
+            with open(file_path, 'rb') as file:
+                files = {
+                    'mediaMessage': file
+                }
+
+                data = {
+                    'number': clean_number,
+                    'mediatype': 'document',
+                    'fileName': os.path.basename(file_path),
+                }
+
+                if caption:
+                    data['caption'] = caption
+
+                response = requests.post(url, headers=headers, data=data, files=files)
+
+                if response.status_code == 201:
+                    print(f"✅ Archivo enviado: {os.path.basename(file_path)}")
+                    return True
+                else:
+                    print(f"❌ Error enviando archivo: {response.status_code}")
+                    print(f"   Respuesta: {response.text}")
+                    return False
+
+        except Exception as e:
+            print(f"❌ Error enviando archivo por Evolution API: {e}")
+            return False
+
     def send_via_twilio(self, message: str, number: str = None) -> bool:
         """Envía mensaje usando Twilio"""
         if not self.api_config['twilio']['enabled']:

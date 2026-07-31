@@ -36,6 +36,8 @@ httpx==0.27.2
 python-dotenv==1.0.0
 schedule==1.2.0
 APScheduler==3.10.4
+pandas==2.0.3
+openpyxl==3.1.2
 ```
 
 ## 📁 Estructura del Proyecto
@@ -47,6 +49,7 @@ seace_buscador/
 ├── agente_ia.py                   # Motor de IA con OpenAI
 ├── seace_extractor_realtime.py    # Extractor de datos SEACE en tiempo real
 ├── whatsapp_notifier.py           # Cliente WhatsApp
+├── excel_generator.py             # Generador de reportes Excel
 ├── scheduler_alertas.py           # Sistema de alertas automáticas (10am y 7pm)
 ├── config_empresa.json            # Configuración de empresa y palabras clave
 ├── requirements.txt               # Dependencias Python
@@ -114,10 +117,30 @@ SEACE_SEGMENTO=43
 - **Archivo:** `scheduler_alertas.py`
 - **Documentación:** `INSTRUCCIONES_ALERTAS.md`
 
-### 5. Comandos Disponibles
+### 5. Exportación a Excel 📊 **NUEVO**
+- **Generación automática:** Archivos Excel con oportunidades SEACE
+- **Envío por WhatsApp:** Usando Evolution API endpoint `/message/sendMedia`
+- **Formato:** `.xlsx` con columnas optimizadas y auto-ajuste de ancho
+- **Filtros disponibles:**
+  - Top N oportunidades más relevantes
+  - Filtrado por score de compatibilidad
+  - Reporte completo
+- **Comandos:**
+  - `/excel` - Top 10 oportunidades
+  - `/excel 30` - Oportunidades con score ≥30%
+  - `/excel top 5` - Top 5 más relevantes
+- **Detección inteligente:** El agente detecta palabras como "excel", "exportar", "envíame archivo"
+- **Archivo:** `excel_generator.py`
+
+### 6. Comandos Disponibles
 
 #### Comandos Directos
 - `/escanear` - Escanea SEACE y analiza con IA
+- `/reporte` - Reporte completo de oportunidades
+- `/urgentes` - Oportunidades que vencen pronto
+- `/excel` - Exportar a Excel y enviar archivo
+- `/estadisticas` - Métricas del sistema
+- `/filtrar [score]` - Filtrar por score mínimo
 - `/estado` - Estado del sistema
 - `/ayuda` - Lista de comandos
 - `/inicio` - Mensaje de bienvenida
@@ -129,8 +152,10 @@ El agente detecta automáticamente preguntas sobre oportunidades y ejecuta escan
 - "¿Cuáles me recomiendas?"
 - "Analiza las licitaciones del mes"
 - "Dame más información de la oportunidad 4"
+- "Envíame un Excel" → Ejecuta `/excel` automáticamente
+- "Exporta las oportunidades" → Ejecuta `/excel` automáticamente
 
-### 5. Características del Análisis IA
+### 7. Características del Análisis IA
 
 #### Información Proporcionada
 ✅ Nombre de la entidad
@@ -258,6 +283,15 @@ python3 test_alertas.py
 python3 scheduler_alertas.py
 ```
 
+### Test del Generador de Excel
+```bash
+# Generar reportes Excel de prueba
+python3 excel_generator.py
+
+# Ver archivos generados
+ls -lh reportes_excel/
+```
+
 ### Ver Logs de Producción
 ```bash
 # SSH al servidor
@@ -333,6 +367,7 @@ git push origin main
 - **v2.3** - Links directos a SEACE
 - **v2.4** - Optimización de prompts y fechas críticas
 - **v2.5** - Sistema de alertas automáticas (10am y 7pm) con detección de oportunidades nuevas
+- **v2.6** - Exportación a Excel y envío por WhatsApp vía Evolution API
 
 ## 🔐 Seguridad
 
