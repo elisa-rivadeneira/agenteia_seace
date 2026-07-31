@@ -151,15 +151,13 @@ class WhatsAppNotifier:
 
             payload = {
                 'number': clean_number,
-                'mediaMessage': {
-                    'mediatype': 'document',
-                    'fileName': os.path.basename(file_path),
-                    'media': file_base64
-                }
+                'mediatype': 'document',
+                'fileName': os.path.basename(file_path),
+                'media': file_base64
             }
 
             if caption:
-                payload['mediaMessage']['caption'] = caption
+                payload['caption'] = caption
 
             print(f"📤 Enviando request a Evolution API (JSON con base64)...")
             response = requests.post(url, headers=headers_with_content, json=payload)
