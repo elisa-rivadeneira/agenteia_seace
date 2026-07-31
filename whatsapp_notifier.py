@@ -139,32 +139,41 @@ class WhatsAppNotifier:
             print(f"📤 URL: {url}")
             print(f"📤 Número destino: {clean_number}")
 
+            # Formato correcto para Evolution API v2
+            headers_with_content = headers.copy()
+            headers_with_content['Content-Type'] = 'application/json'
+
+            # Leer archivo y convertir a base64
+            import base64
             with open(file_path, 'rb') as file:
-                files = {
-                    'mediaMessage': (os.path.basename(file_path), file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                file_content = file.read()
+                file_base64 = base64.b64encode(file_content).decode('utf-8')
+
+            payload = {
+                'number': clean_number,
+                'mediaMessage': {
+                    'mediatype': 'document',
+                    'fileName': os.path.basename(file_path),
+                    'media': file_base64
                 }
+            }
 
-                data = {
-                    'number': clean_number,
-                    'mediatype': 'document'
-                }
+            if caption:
+                payload['mediaMessage']['caption'] = caption
 
-                if caption:
-                    data['caption'] = caption
+            print(f"📤 Enviando request a Evolution API (JSON con base64)...")
+            response = requests.post(url, headers=headers_with_content, json=payload)
 
-                print(f"📤 Enviando request a Evolution API...")
-                response = requests.post(url, headers=headers, data=data, files=files)
+            print(f"📤 Status Code: {response.status_code}")
+            print(f"📤 Response: {response.text[:500]}")
 
-                print(f"📤 Status Code: {response.status_code}")
-                print(f"📤 Response: {response.text[:500]}")
-
-                if response.status_code in [200, 201]:
-                    print(f"✅ Archivo enviado: {os.path.basename(file_path)}")
-                    return True
-                else:
-                    print(f"❌ Error enviando archivo: {response.status_code}")
-                    print(f"   Respuesta completa: {response.text}")
-                    return False
+            if response.status_code in [200, 201]:
+                print(f"✅ Archivo enviado: {os.path.basename(file_path)}")
+                return True
+            else:
+                print(f"❌ Error enviando archivo: {response.status_code}")
+                print(f"   Respuesta completa: {response.text}")
+                return False
 
         except Exception as e:
             print(f"❌ Error enviando archivo por Evolution API: {e}")
