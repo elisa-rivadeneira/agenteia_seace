@@ -87,15 +87,27 @@ def obtener_usuario(numero: str) -> Optional[Dict]:
 
 def actualizar_usuario(numero: str, datos: Dict) -> bool:
     """Actualiza datos de un usuario"""
-    usuarios = cargar_usuarios()
+    try:
+        print(f"📝 Actualizando usuario {numero} con datos: {datos}")
+        usuarios = cargar_usuarios()
+        print(f"📋 Total usuarios cargados: {len(usuarios)}")
 
-    for u in usuarios:
-        if u['numero'] == numero:
-            u.update(datos)
-            u['ultima_modificacion'] = datetime.now().isoformat()
-            return guardar_usuarios(usuarios)
+        for u in usuarios:
+            if u['numero'] == numero:
+                print(f"✅ Usuario encontrado, actualizando...")
+                u.update(datos)
+                u['ultima_modificacion'] = datetime.now().isoformat()
+                resultado = guardar_usuarios(usuarios)
+                print(f"💾 Guardado: {resultado}")
+                return resultado
 
-    return False
+        print(f"⚠️ Usuario {numero} no encontrado en la lista")
+        return False
+    except Exception as e:
+        print(f"❌ Error en actualizar_usuario: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 def eliminar_usuario(numero: str) -> bool:
     """Elimina un usuario"""
@@ -110,10 +122,19 @@ def obtener_usuarios_activos() -> List[Dict]:
 
 def configurar_segmentos_usuario(numero: str, segmentos: List[str]) -> bool:
     """Configura los segmentos de interés de un usuario"""
-    return actualizar_usuario(numero, {
-        'segmentos': segmentos,
-        'configurado': True
-    })
+    try:
+        print(f"📝 Configurando segmentos para {numero}: {segmentos}")
+        resultado = actualizar_usuario(numero, {
+            'segmentos': segmentos,
+            'configurado': True
+        })
+        print(f"✅ Resultado configuración: {resultado}")
+        return resultado
+    except Exception as e:
+        print(f"❌ Error en configurar_segmentos_usuario: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 def obtener_segmentos_usuario(numero: str) -> List[str]:
     """Obtiene los segmentos configurados de un usuario"""
