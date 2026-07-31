@@ -161,9 +161,16 @@ def robots():
 @app.route('/status', methods=['GET'])
 def status():
     """Estado del webhook server"""
+    comandos_disponibles = []
+    if agente_seace:
+        comandos_disponibles = list(agente_seace.comandos.keys())
+
     return jsonify({
         'status': 'running',
+        'version': '2.6.1',
         'agente_activo': agente_seace is not None,
+        'comandos_disponibles': comandos_disponibles,
+        'tiene_comando_excel': '/excel' in comandos_disponibles,
         'mensajes_recibidos': len(mensajes_recibidos),
         'ultimo_mensaje': mensajes_recibidos[-1] if mensajes_recibidos else None
     })
