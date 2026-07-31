@@ -537,10 +537,16 @@ _Ejemplos:_
 
     def comando_configurar(self, args="", numero_usuario=None):
         """Configuración interactiva de segmentos"""
-        from database_manager import obtener_catalogo_segmentos, obtener_segmentos_usuario, configurar_segmentos_usuario
+        from database_manager import obtener_catalogo_segmentos, obtener_segmentos_usuario, configurar_segmentos_usuario, obtener_usuario, agregar_usuario
 
         if not numero_usuario:
             return "❌ Error: No se pudo identificar el usuario"
+
+        # Auto-registrar usuario si no existe
+        usuario = obtener_usuario(numero_usuario)
+        if not usuario:
+            agregar_usuario(numero_usuario, "Usuario", "")
+            print(f"✅ Usuario auto-registrado: {numero_usuario}")
 
         catalogo = obtener_catalogo_segmentos()
 
@@ -567,11 +573,17 @@ Ejemplo: `/configurar 43,45` para Tecnologías de la Información + Telecomunica
 
         # Procesar configuración
         try:
-            codigos = [c.strip() for c in args.split(',')]
+            # Limpiar espacios y separar por comas
+            codigos = [c.strip() for c in args.replace(' ', '').split(',') if c.strip()]
             validos = [c for c in codigos if c in catalogo]
 
             if not validos:
-                return "❌ No se encontraron segmentos válidos. Usa `/configurar` para ver la lista."
+                invalidos = [c for c in codigos if c not in catalogo]
+                return f"""❌ No se encontraron segmentos válidos
+
+Códigos inválidos: {', '.join(invalidos) if invalidos else 'ninguno procesado'}
+
+Usa `/configurar` (sin argumentos) para ver la lista completa de segmentos disponibles."""
 
             if configurar_segmentos_usuario(numero_usuario, validos):
                 nombres = [f"*{c}* - {catalogo[c]}" for c in validos]
@@ -589,10 +601,16 @@ Ahora recibirás alertas de estos segmentos."""
 
     def comando_mis_segmentos(self, args="", numero_usuario=None):
         """Muestra los segmentos configurados del usuario"""
-        from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento
+        from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento, obtener_usuario, agregar_usuario
 
         if not numero_usuario:
             return "❌ Error: No se pudo identificar el usuario"
+
+        # Auto-registrar usuario si no existe
+        usuario = obtener_usuario(numero_usuario)
+        if not usuario:
+            agregar_usuario(numero_usuario, "Usuario", "")
+
         segmentos = obtener_segmentos_usuario(numero_usuario)
 
         if not segmentos:
@@ -615,10 +633,15 @@ Usa `/configurar` para modificarlos"""
 
     def comando_agregar_segmento(self, args="", numero_usuario=None):
         """Agrega un segmento sin reemplazar los existentes"""
-        from database_manager import agregar_segmento_usuario, obtener_catalogo_segmentos, obtener_nombre_segmento
+        from database_manager import agregar_segmento_usuario, obtener_catalogo_segmentos, obtener_nombre_segmento, obtener_usuario, agregar_usuario
 
         if not numero_usuario:
             return "❌ Error: No se pudo identificar el usuario"
+
+        # Auto-registrar usuario si no existe
+        usuario = obtener_usuario(numero_usuario)
+        if not usuario:
+            agregar_usuario(numero_usuario, "Usuario", "")
 
         if not args.strip():
             return """❌ Debes especificar el código del segmento
