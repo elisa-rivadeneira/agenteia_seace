@@ -436,10 +436,29 @@ _¿Tienes alguna pregunta específica?_"""
             from excel_generator import ExcelGeneratorSEACE
             print("📊 Módulo excel_generator importado correctamente")
 
+            # Enviar mensaje de procesando
+            self.notifier.send_message("⏳ Escaneando SEACE y generando Excel...\nEsto puede tardar unos segundos.", priority='normal')
+
+            # ESCANEAR AUTOMÁTICAMENTE primero para tener datos frescos
+            print("🔍 Escaneando SEACE para datos frescos...")
+            resultado_escaneo = subprocess.run(
+                ['python3', 'seace_extractor_realtime.py'],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if resultado_escaneo.returncode != 0:
+                print(f"⚠️ Error en escaneo: {resultado_escaneo.stderr[:200]}")
+                return "❌ Error al escanear SEACE. Intenta de nuevo en unos segundos."
+
+            print("✅ Escaneo completado, cargando datos...")
+
+            # Cargar datos recién escaneados
             archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
             if not archivos_json:
                 print("📊 ❌ No hay archivos JSON de oportunidades")
-                return "❌ No hay datos disponibles. Usa /escanear primero para generar información."
+                return "❌ No se encontraron oportunidades. Intenta de nuevo."
 
             archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
 
