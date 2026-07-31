@@ -485,6 +485,16 @@ _¿Tienes alguna pregunta específica?_"""
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
+        # PRIORIDAD 1: Detectar si pide Excel (ANTES de la IA)
+        if any(palabra in mensaje_lower for palabra in ['excel', 'exportar', 'exporta', 'descarga']):
+            print(f"📊 Solicitud de Excel detectada: {mensaje[:50]}...")
+            return self.comando_excel("")
+
+        # PRIORIDAD 2: Si pide archivo y menciona oportunidades
+        if 'archivo' in mensaje_lower and any(p in mensaje_lower for p in ['oportunidad', 'licitacion', 'licitación']):
+            print(f"📊 Solicitud de archivo de oportunidades detectada")
+            return self.comando_excel("")
+
         # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
         if self.agente_ia and self.agente_ia.activo:
             # Detectar si pide detalle de una oportunidad específica
@@ -542,14 +552,6 @@ _¿Tienes alguna pregunta específica?_"""
                     import traceback
                     traceback.print_exc()
                     return f"❌ Error obteniendo detalle: {str(e)[:100]}"
-
-            # Detectar si pide Excel
-            if any(palabra in mensaje_lower for palabra in [
-                'excel', 'exportar', 'exporta', 'descarga', 'archivo', 'hoja de calculo',
-                'hoja de cálculo', 'envíame', 'enviame', 'manda', 'envía', 'envia'
-            ]):
-                # Si menciona Excel, ejecutar comando /excel directamente
-                return self.comando_excel("")
 
             # Detectar si pregunta sobre oportunidades en general
             if any(palabra in mensaje_lower for palabra in [
