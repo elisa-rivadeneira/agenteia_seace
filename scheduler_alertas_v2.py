@@ -150,9 +150,9 @@ _No hay oportunidades que cumplan el filtro de compatibilidad_"""
                 registrar_ejecucion_alerta(alerta_id)
                 return
 
-            # Ordenar por fecha de presentación (más próximas primero) y limitar a max_ops
-            relevantes_ordenadas = sorted(relevantes, key=lambda x: x.get('fecha_presentacion', '9999-12-31'))[:max_ops]
-            print(f"📤 Se enviarán las {len(relevantes_ordenadas)} más próximas a vencer")
+            # Ordenar por fecha de inicio de consultas (más recientes primero) y limitar a max_ops
+            relevantes_ordenadas = sorted(relevantes, key=lambda x: x.get('fecha_inicio', '0000-00-00'), reverse=True)[:max_ops]
+            print(f"📤 Se enviarán las {len(relevantes_ordenadas)} más recientes (recién publicadas)")
 
             # Mensaje inicial
             mensaje_inicial = f"""🔔 *ALERTA AUTOMÁTICA SEACE*
@@ -162,7 +162,7 @@ Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 📊 Total oportunidades: {len(oportunidades)}
 ⭐ Con compatibilidad ≥{score_minimo}%: {len(relevantes)}
 
-📤 Te envío las {len(relevantes_ordenadas)} más próximas a vencer..."""
+🆕 Te envío las {len(relevantes_ordenadas)} más recientes (recién publicadas)..."""
 
             # Enviar a todos los usuarios
             for numero_usuario in usuarios:
