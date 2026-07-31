@@ -80,10 +80,9 @@ class AgenteWhatsAppSEACE:
 • /escanear - Buscar oportunidades ahora
 • /reporte - Reporte completo actual
 • /urgentes - Solo oportunidades urgentes
-• /excel - Exportar a Excel y enviar archivo
+• /excel - Exportar TODAS a Excel
+• /excel 10 - Solo top 10 a Excel
 • /estado - Estado del sistema
-• /estadisticas - Métricas del monitor
-• /config - Configuración actual
 • /ayuda - Lista completa de comandos
 
 _Escribe cualquier comando para comenzar_"""
@@ -359,10 +358,9 @@ _Usa /reporte para ver detalles completos_"""
 📊 *ANÁLISIS Y EXPORTACIÓN:*
 • `/estadisticas` - Métricas detalladas
 • `/filtrar [score]` - Filtrar por score mínimo
-• `/excel` - Top 10 en Excel
-• `/excel todas` - TODAS las oportunidades en Excel
-• `/excel 30` - Score ≥30% en Excel
-• `/excel top 20` - Top 20 en Excel
+• `/excel` - TODAS las oportunidades en Excel
+• `/excel 10` - Solo top 10 en Excel
+• `/excel 20` - Solo top 20 en Excel
 
 ⚙️ *SISTEMA:*
 • `/config` - Ver configuración
@@ -455,47 +453,36 @@ _¿Tienes alguna pregunta específica?_"""
 
             generator = ExcelGeneratorSEACE()
 
+            # Ordenar por fecha de presentación (más próximas primero)
+            oportunidades_ordenadas = sorted(
+                oportunidades,
+                key=lambda x: x.get('fecha_presentacion', '9999-12-31')
+            )
+
             if args.strip():
                 args_lower = args.strip().lower()
 
-                # /excel todas - TODAS las oportunidades ordenadas por fecha
-                if args_lower == 'todas' or args_lower == 'all':
-                    # Ordenar por fecha de presentación (más próximas primero)
-                    oportunidades_ordenadas = sorted(
-                        oportunidades,
-                        key=lambda x: x.get('fecha_presentacion', '9999-12-31')
-                    )
-                    excel_path = generator.generar_excel_oportunidades(oportunidades_ordenadas)
-                    caption = f"📊 TODAS las oportunidades del segmento 43 ({len(oportunidades)} total)\n⏰ Ordenadas por fecha de presentación"
-
-                # /excel 30 - Filtrar por score
-                elif args_lower.isdigit():
-                    score_min = int(args_lower)
-                    excel_path = generator.generar_excel_filtrado(oportunidades, score_minimo=score_min)
-                    caption = f"📊 Oportunidades SEACE con compatibilidad ≥ {score_min}%"
-
-                # /excel top 20 - Top N
-                elif args_lower.startswith('top'):
-                    limite = int(args.strip().split()[-1]) if len(args.strip().split()) > 1 else 10
-                    excel_path = generator.generar_excel_top_relevantes(oportunidades, limite=limite)
-                    caption = f"📊 Top {limite} Oportunidades SEACE más relevantes"
+                # /excel 10 - Top N oportunidades
+                if args_lower.isdigit():
+                    limite = int(args_lower)
+                    excel_path = generator.generar_excel_top_relevantes(oportunidades_ordenadas, limite=limite)
+                    caption = f"📊 Top {limite} Oportunidades SEACE (ordenadas por fecha de presentación)"
 
                 else:
                     return """❌ Uso incorrecto. Opciones disponibles:
 
 📊 *COMANDOS /excel:*
-• `/excel` - Top 10 más relevantes
-• `/excel todas` - TODAS las oportunidades (ordenadas por fecha)
-• `/excel 30` - Score ≥30%
-• `/excel top 20` - Top 20 más relevantes
+• `/excel` - TODAS las oportunidades (ordenadas por fecha)
+• `/excel 10` - Solo top 10 más próximas a vencer
+• `/excel 20` - Solo top 20 más próximas a vencer
 
 _Ejemplos:_
-• /excel todas ← Descarga completa del segmento 43
-• /excel 50 ← Solo oportunidades muy compatibles"""
+• /excel ← Descarga completa del segmento 43
+• /excel 5 ← Solo las 5 más urgentes"""
             else:
-                # Por defecto: Top 10
-                excel_path = generator.generar_excel_top_relevantes(oportunidades, limite=10)
-                caption = "📊 Top 10 Oportunidades SEACE más relevantes"
+                # Por defecto: TODAS las oportunidades
+                excel_path = generator.generar_excel_oportunidades(oportunidades_ordenadas)
+                caption = f"📊 TODAS las oportunidades del segmento 43 ({len(oportunidades)} total)\n⏰ Ordenadas por fecha de presentación"
 
             print(f"📊 Intentando enviar archivo: {excel_path}")
             print(f"📊 Caption: {caption}")
