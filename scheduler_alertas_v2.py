@@ -125,19 +125,19 @@ class SchedulerAlertasV2:
             oportunidades = resultado.get('oportunidades', [])
             print(f"📊 Total oportunidades encontradas: {len(oportunidades)}")
 
-            # Detectar nuevas
-            nuevas = self.detectar_nuevas_oportunidades(oportunidades)
-            print(f"🆕 Oportunidades nuevas: {len(nuevas)}")
+            # Filtrar por score mínimo (todas, no solo nuevas)
+            relevantes = [op for op in oportunidades if op.get('score_compatibilidad', 0) >= score_minimo]
+            print(f"⭐ Oportunidades relevantes (≥{score_minimo}%): {len(relevantes)}")
 
-            if not nuevas:
-                print("✅ No hay oportunidades nuevas en este escaneo")
+            if not relevantes:
+                print("⚠️ No hay oportunidades con score suficiente")
                 mensaje_resumen = f"""📊 *Escaneo SEACE - {nombre_alerta}*
 Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
 Total encontradas: {len(oportunidades)}
-Nuevas: 0
+Con compatibilidad ≥{score_minimo}%: 0
 
-_No hay nuevas oportunidades desde el último escaneo_"""
+_No hay oportunidades que cumplan el filtro de compatibilidad_"""
 
                 # Enviar a todos los usuarios de la alerta
                 for numero_usuario in usuarios:
@@ -150,20 +150,19 @@ _No hay nuevas oportunidades desde el último escaneo_"""
                 registrar_ejecucion_alerta(alerta_id)
                 return
 
-            # Filtrar por score
-            nuevas_relevantes = [op for op in nuevas if op.get('score_compatibilidad', 0) >= score_minimo]
-            print(f"⭐ Nuevas relevantes (≥{score_minimo}%): {len(nuevas_relevantes)}")
+            # Ordenar por fecha de presentación (más próximas primero) y limitar a max_ops
+            relevantes_ordenadas = sorted(relevantes, key=lambda x: x.get('fecha_presentacion', '9999-12-31'))[:max_ops]
+            print(f"📤 Se enviarán las {len(relevantes_ordenadas)} más próximas a vencer")
 
             # Mensaje inicial
             mensaje_inicial = f"""🔔 *ALERTA AUTOMÁTICA SEACE*
 📋 {nombre_alerta}
 Hora: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 
-*¡Se encontraron {len(nuevas)} nuevas oportunidades!*
+📊 Total oportunidades: {len(oportunidades)}
+⭐ Con compatibilidad ≥{score_minimo}%: {len(relevantes)}
 
-{len(nuevas_relevantes)} con alta compatibilidad (≥{score_minimo}%)
-
-Te enviaré los detalles de las más importantes..."""
+📤 Te envío las {len(relevantes_ordenadas)} más próximas a vencer..."""
 
             # Enviar a todos los usuarios
             for numero_usuario in usuarios:
@@ -175,40 +174,30 @@ Te enviaré los detalles de las más importantes..."""
 
             time.sleep(2)
 
-            # Enviar detalles de oportunidades relevantes
-            if nuevas_relevantes:
-                for i, op in enumerate(nuevas_relevantes[:max_ops], 1):
-                    print(f"📤 Enviando oportunidad {i}/{min(max_ops, len(nuevas_relevantes))}")
-                    mensaje = self.formato_alerta_whatsapp(op)
-
-                    for numero_usuario in usuarios:
-                        usuario = obtener_usuario(numero_usuario)
-                        if usuario and usuario.get('activo', False):
-                            self.whatsapp.send_message(mensaje, numero_usuario)
-                            time.sleep(1)
-
-                    time.sleep(2)
-
-                if len(nuevas_relevantes) > max_ops:
-                    mensaje_extra = f"""
-_Hay {len(nuevas_relevantes) - max_ops} oportunidades relevantes adicionales._
-
-Envía */escanear* para ver el análisis completo con la IA."""
-
-                    for numero_usuario in usuarios:
-                        usuario = obtener_usuario(numero_usuario)
-                        if usuario and usuario.get('activo', False):
-                            self.whatsapp.send_message(mensaje_extra, numero_usuario)
-                            time.sleep(1)
-            else:
-                mensaje_sin_relevantes = f"""_Las nuevas oportunidades tienen baja compatibilidad (<{score_minimo}%)_
-
-Envía */escanear* para ver el análisis completo."""
+            # Enviar detalles de las oportunidades más relevantes
+            for i, op in enumerate(relevantes_ordenadas, 1):
+                print(f"📤 Enviando oportunidad {i}/{len(relevantes_ordenadas)}")
+                mensaje = self.formato_alerta_whatsapp(op)
 
                 for numero_usuario in usuarios:
                     usuario = obtener_usuario(numero_usuario)
                     if usuario and usuario.get('activo', False):
-                        self.whatsapp.send_message(mensaje_sin_relevantes, numero_usuario)
+                        self.whatsapp.send_message(mensaje, numero_usuario)
+                        time.sleep(1)
+
+                time.sleep(2)
+
+            # Mensaje final si hay más oportunidades
+            if len(relevantes) > max_ops:
+                mensaje_extra = f"""
+_Hay {len(relevantes) - max_ops} oportunidades relevantes adicionales._
+
+Envía */escanear* para ver el análisis completo con la IA."""
+
+                for numero_usuario in usuarios:
+                    usuario = obtener_usuario(numero_usuario)
+                    if usuario and usuario.get('activo', False):
+                        self.whatsapp.send_message(mensaje_extra, numero_usuario)
                         time.sleep(1)
 
             print(f"✅ Alerta '{nombre_alerta}' ejecutada para {len(usuarios)} usuario(s)")
