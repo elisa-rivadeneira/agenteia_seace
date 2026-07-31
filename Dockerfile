@@ -32,7 +32,7 @@ COPY landing_page.html .
 COPY robots.txt .
 COPY start_services.sh .
 
-# Create data directory
+# Create data directory for persistent storage
 RUN mkdir -p /data
 
 # Set environment variables
@@ -41,6 +41,9 @@ ENV FLASK_ENV=production
 
 # Expose port
 EXPOSE 5000
+
+# Volume declaration (mount will be configured in Easypanel)
+VOLUME /data
 
 # Make start script executable
 RUN chmod +x start_services.sh
