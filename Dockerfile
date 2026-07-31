@@ -32,15 +32,12 @@ COPY landing_page.html .
 COPY robots.txt .
 COPY start_services.sh .
 
-# Create data directory for persistent volume
+# Create data directory
 RUN mkdir -p /data
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
-
-# VOLUME for persistent data (configurar en Easypanel)
-VOLUME ["/data"]
 
 # Expose port
 EXPOSE 5000
