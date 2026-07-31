@@ -38,6 +38,7 @@ RUN mkdir -p /data
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
+ENV TZ=America/Lima
 
 # Expose port
 EXPOSE 5000
