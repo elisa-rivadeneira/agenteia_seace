@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SEACE Bot - Asistente inteligente para licitaciones públicas peruanas. Alertas automáticas vía WhatsApp con IA.">
+    <meta name="keywords" content="SEACE, licitaciones, Perú, WhatsApp, IA, alertas, contrataciones públicas">
+    <title>SEACE Bot - Asistente Inteligente de Licitaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+
+        .feature:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .feature h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .feature p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .cta {
+            margin-top: 50px;
+        }
+
+        .cta-button {
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .status {
+            margin-top: 30px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .admin-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .admin-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin" class="admin-link">🔐 Admin</a>
+
+    <div class="container">
+        <div class="logo">🤖</div>
+        <h1>SEACE Bot</h1>
+        <p class="subtitle">Tu asistente inteligente para licitaciones públicas</p>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h3>Escaneo Automático</h3>
+                <p>Monitoreo 24/7 del portal SEACE para encontrar nuevas oportunidades</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🧠</div>
+                <h3>IA Inteligente</h3>
+                <p>Análisis con GPT-4 para identificar las mejores oportunidades para tu empresa</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h3>Alertas WhatsApp</h3>
+                <p>Notificaciones instantáneas vía WhatsApp cuando aparecen licitaciones relevantes</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">⏰</div>
+                <h3>Alertas Programadas</h3>
+                <p>Configura múltiples alertas automáticas con horarios y destinatarios personalizados</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Score de Compatibilidad</h3>
+                <p>Cada oportunidad tiene un score basado en palabras clave de tu empresa</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🔗</div>
+                <h3>Links Directos</h3>
+                <p>Accede directamente a cada licitación en el portal SEACE con un click</p>
+            </div>
+        </div>
+
+        <div class="cta">
+            <a href="https://wa.me/51910364758?text=Hola%20quiero%20información%20sobre%20oportunidades%20SEACE"
+               class="cta-button"
+               target="_blank">
+                💬 Chatear con el Bot
+            </a>
+        </div>
+
+        <div class="status">
+            <p>✅ Sistema activo | 🔒 En modo beta privado</p>
+        </div>
+    </div>
+</body>
+</html>
