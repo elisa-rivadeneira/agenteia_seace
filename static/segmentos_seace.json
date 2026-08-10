@@ -1,0 +1,282 @@
+[
+  {
+    "codigo": "10",
+    "nombre": "Material vegetal y animal vivo, accesorios y suministros",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "11",
+    "nombre": "Materiales minerales, textiles y de origen vegetal/animal no comestibles",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "12",
+    "nombre": "Productos químicos, bioquímicos y gases industriales",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "13",
+    "nombre": "Resinas, cauchos, espumas, films y elastómeros",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "14",
+    "nombre": "Papel y productos de papel",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "15",
+    "nombre": "Combustibles, aditivos, lubricantes y anticorrosivos",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "20",
+    "nombre": "Maquinaria de minería y perforación de pozos",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "21",
+    "nombre": "Maquinaria agrícola, pesquera, forestal y de vida silvestre",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "22",
+    "nombre": "Maquinaria de construcción y edificación",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "23",
+    "nombre": "Maquinaria de manufactura y procesamiento industrial",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "24",
+    "nombre": "Maquinaria de manejo de materiales, almacenamiento y acondicionamiento",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "25",
+    "nombre": "Vehículos comerciales, militares y privados, y sus accesorios",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "26",
+    "nombre": "Maquinaria de generación y distribución de energía",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "27",
+    "nombre": "Herramientas y maquinaria general",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "30",
+    "nombre": "Estructuras, construcción y componentes de manufactura",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "31",
+    "nombre": "Componentes y suministros para manufactura",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "32",
+    "nombre": "Componentes electrónicos",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "39",
+    "nombre": "Sistemas eléctricos, iluminación, componentes y accesorios",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "40",
+    "nombre": "Sistemas de distribución y acondicionamiento (aire, gas, fluidos)",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "41",
+    "nombre": "Equipos de laboratorio, medición, observación y prueba",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "42",
+    "nombre": "Equipos médicos, accesorios y suministros",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "43",
+    "nombre": "Tecnología de la información, radiodifusión y telecomunicaciones",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "44",
+    "nombre": "Equipos y suministros de oficina",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "45",
+    "nombre": "Equipos de impresión, fotografía, audio y video",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "46",
+    "nombre": "Equipos de defensa, seguridad y orden público",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "47",
+    "nombre": "Equipos de limpieza",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "48",
+    "nombre": "Maquinaria y equipos para industria de servicios",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "49",
+    "nombre": "Equipos deportivos y recreativos",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "50",
+    "nombre": "Alimentos, bebidas y tabaco",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "51",
+    "nombre": "Medicamentos y productos farmacéuticos",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "52",
+    "nombre": "Electrodomésticos y electrónica de consumo",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "53",
+    "nombre": "Vestimenta, equipaje y cuidado personal",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "54",
+    "nombre": "Relojes, joyería y piedras preciosas",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "55",
+    "nombre": "Productos publicados (software, libros, música, revistas)",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "56",
+    "nombre": "Muebles y mobiliario",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "60",
+    "nombre": "Instrumentos musicales, juegos, arte y equipo educativo",
+    "tipo": "Bien"
+  },
+  {
+    "codigo": "70",
+    "nombre": "Servicios agrícolas, pesqueros, forestales y de vida silvestre",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "71",
+    "nombre": "Servicios de minería, petróleo y gas",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "72",
+    "nombre": "Servicios de construcción y mantenimiento de edificaciones",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "73",
+    "nombre": "Servicios de producción y manufactura industrial",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "76",
+    "nombre": "Servicios de limpieza industrial",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "77",
+    "nombre": "Servicios ambientales",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "78",
+    "nombre": "Servicios de transporte, almacenamiento y correo",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "80",
+    "nombre": "Servicios de gestión empresarial y administrativos",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "81",
+    "nombre": "Servicios de ingeniería, investigación y tecnología",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "82",
+    "nombre": "Servicios editoriales, diseño y arte gráfico",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "83",
+    "nombre": "Servicios públicos y del sector público",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "84",
+    "nombre": "Servicios financieros y de seguros",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "85",
+    "nombre": "Servicios de salud",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "86",
+    "nombre": "Servicios de educación y capacitación",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "90",
+    "nombre": "Servicios de viajes, alimentación, hospedaje y entretenimiento",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "91",
+    "nombre": "Servicios personales y domésticos",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "92",
+    "nombre": "Servicios de defensa nacional, orden público y seguridad",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "93",
+    "nombre": "Servicios de asuntos políticos y cívicos",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "94",
+    "nombre": "Organizaciones y clubes",
+    "tipo": "Servicio"
+  },
+  {
+    "codigo": "95",
+    "nombre": "Terrenos, edificios, estructuras y vías",
+    "tipo": "Bien"
+  }
+]
