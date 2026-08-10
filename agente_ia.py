@@ -8,6 +8,7 @@ import os
 import json
 from openai import OpenAI
 from datetime import datetime
+from agente_db_tools import HERRAMIENTAS_DB
 
 class AgenteIASEACE:
     def __init__(self):
@@ -200,6 +201,223 @@ _Vuelve a escanear más tarde con /escanear_"""
         respuesta += "_💡 Activa el Agente IA configurando OPENAI_API_KEY para análisis detallado_"
 
         return respuesta
+
+    def consultar_configuracion(self, numero_usuario, pregunta):
+        """
+        Permite al usuario consultar y modificar su configuración usando IA
+
+        Args:
+            numero_usuario: Número de WhatsApp del usuario
+            pregunta: Pregunta o solicitud del usuario
+
+        Returns:
+            str: Respuesta conversacional de la IA
+        """
+        if not self.activo:
+            return "⚠️ Agente IA no disponible. Configura OPENAI_API_KEY para activarlo."
+
+        # Definir las herramientas disponibles para la IA
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "obtener_perfil_completo",
+                    "description": "Obtiene toda la configuración del usuario: datos personales, empresa, segmentos SEACE configurados y preferencias de alertas",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "consultar_segmentos_usuario",
+                    "description": "Consulta los segmentos SEACE que el usuario tiene configurados para recibir alertas",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "modificar_segmentos",
+                    "description": "Modifica los segmentos SEACE del usuario. Úsalo cuando el usuario quiera agregar o cambiar segmentos.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            },
+                            "segmentos_nuevos": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Lista de códigos de segmentos SEACE (ej: ['43', '45', '52'])"
+                            }
+                        },
+                        "required": ["numero_telefono", "segmentos_nuevos"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "consultar_empresa_usuario",
+                    "description": "Consulta la información de la empresa del usuario y sus palabras clave",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "modificar_empresa",
+                    "description": "Modifica el nombre de la empresa o las palabras clave de búsqueda",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            },
+                            "nombre_empresa": {
+                                "type": "string",
+                                "description": "Nuevo nombre de la empresa (opcional)"
+                            },
+                            "palabras_clave": {
+                                "type": "object",
+                                "properties": {
+                                    "palabras_positivas": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "description": "Palabras que aumentan relevancia"
+                                    },
+                                    "palabras_negativas": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "description": "Palabras que disminuyen relevancia"
+                                    }
+                                },
+                                "description": "Palabras clave para scoring de oportunidades (opcional)"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "consultar_configuracion_alertas",
+                    "description": "Consulta la configuración de alertas del usuario (horarios, días, etc.)",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
+            }
+        ]
+
+        system_prompt = """Eres un asistente de configuración del sistema SEACE.
+
+Tu trabajo es ayudar al usuario a:
+1. Consultar su configuración actual (empresa, segmentos, alertas)
+2. Modificar su configuración cuando lo solicite
+3. Explicar qué significa cada configuración
+
+IMPORTANTE:
+- Sé conversacional y amigable
+- Cuando el usuario pregunte por su configuración, usa las herramientas para obtener datos reales
+- Si el usuario quiere modificar algo, confirma los cambios antes de hacerlos
+- Explica los segmentos SEACE de forma clara (ej: "Segmento 43 es Tecnologías de la Información")
+- Usa emojis para mejor visualización en WhatsApp"""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": pregunta}
+        ]
+
+        try:
+            # Primera llamada a la IA
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"
+            )
+
+            response_message = response.choices[0].message
+            tool_calls = response_message.tool_calls
+
+            # Si la IA quiere usar herramientas
+            if tool_calls:
+                messages.append(response_message)
+
+                # Ejecutar cada tool call
+                for tool_call in tool_calls:
+                    function_name = tool_call.function.name
+                    function_args = json.loads(tool_call.function.arguments)
+
+                    # Inyectar el número de usuario si no está en los argumentos
+                    if "numero_telefono" in function_args and not function_args["numero_telefono"]:
+                        function_args["numero_telefono"] = numero_usuario
+                    elif "numero_telefono" not in function_args:
+                        function_args["numero_telefono"] = numero_usuario
+
+                    # Ejecutar la función
+                    function_response = HERRAMIENTAS_DB[function_name](**function_args)
+
+                    # Agregar la respuesta al historial
+                    messages.append({
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": json.dumps(function_response, ensure_ascii=False)
+                    })
+
+                # Segunda llamada para que la IA procese los resultados
+                second_response = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages
+                )
+
+                return second_response.choices[0].message.content
+            else:
+                # La IA respondió directamente sin usar herramientas
+                return response_message.content
+
+        except Exception as e:
+            print(f"❌ Error en consulta de configuración: {e}")
+            return f"⚠️ Error al procesar tu consulta: {str(e)}"
 
 # Prueba
 if __name__ == "__main__":

@@ -665,11 +665,28 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
         else:
             return f"⚠️ El segmento *{codigo}* ya estaba en tu lista"
 
-    def procesar_mensaje_libre(self, mensaje: str) -> str:
+    def procesar_mensaje_libre(self, mensaje: str, numero_usuario=None) -> str:
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
-        # PRIORIDAD MÁXIMA: Detectar Excel PRIMERO
+        # PRIORIDAD MÁXIMA: Detectar preguntas sobre configuración
+        palabras_config = ['mi configuración', 'mi configuracion', 'mis segmentos', 'mi empresa',
+                          'mis alertas', 'mi perfil', 'cambia', 'modifica', 'configura',
+                          'qué segmentos', 'que segmentos', 'cuál es mi', 'cual es mi',
+                          'cómo está configurado', 'como esta configurado', 'mi cuenta']
+
+        if any(palabra in mensaje_lower for palabra in palabras_config):
+            print(f"⚙️ ✅ CONSULTA DE CONFIGURACIÓN DETECTADA: '{mensaje[:80]}...'")
+            if self.agente_ia and self.agente_ia.activo and numero_usuario:
+                return self.agente_ia.consultar_configuracion(numero_usuario, mensaje)
+            else:
+                return """⚙️ Para consultar tu configuración, usa:
+
+• `/missegmentos` - Ver tus segmentos activos
+• `/configurar` - Panel de configuración completo
+• `/ayuda` - Lista de todos los comandos"""
+
+        # PRIORIDAD ALTA: Detectar Excel
         palabras_excel = ['excel', 'exportar', 'exporta', 'descarga', 'xls', 'xlsx']
         if any(palabra in mensaje_lower for palabra in palabras_excel):
             print(f"📊 ✅ EXCEL DETECTADO: '{mensaje[:80]}...'")
@@ -836,7 +853,7 @@ Usa /ayuda para ver todos los comandos."""
                 respuesta = f"❓ Comando '{comando}' no reconocido. Usa /ayuda para ver comandos disponibles."
         else:
             # Mensaje libre
-            respuesta = self.procesar_mensaje_libre(mensaje)
+            respuesta = self.procesar_mensaje_libre(mensaje, numero_usuario=numero_usuario)
 
         # Guardar respuesta
         self.conversaciones.append({

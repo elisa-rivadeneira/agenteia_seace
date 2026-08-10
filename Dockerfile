@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY webhook_server.py .
 COPY agente_whatsapp.py .
 COPY agente_ia.py .
+COPY agente_db_tools.py .
 COPY whatsapp_notifier.py .
 COPY excel_generator.py .
 COPY seace_extractor_realtime.py .
