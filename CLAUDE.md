@@ -328,6 +328,47 @@ docker restart [container_id]
 2. Verificar instance name coincide
 3. Revisar logs de Evolution API
 
+### Evolution API - Error 401 (Unauthorized) / Desconexión
+**Síntomas:**
+- Estado muestra `"connectionStatus": "open"` pero con `"disconnectionReasonCode": 401`
+- Mensajes no llegan al bot
+- Evolution API logs no muestra actividad
+
+**Causas:**
+1. WhatsApp detecta comportamiento inusual (muchas reconexiones rápidas)
+2. Sesión duplicada (mismo número conectado en otro dispositivo)
+3. WhatsApp Web rate limiting (demasiados intentos de conexión)
+4. Cambios internos en el protocolo WhatsApp/Baileys
+
+**Solución:**
+```bash
+# 1. Verificar estado de conexión
+curl -X GET "https://automation-evolution-api.gnrjtm.easypanel.host/instance/fetchInstances" \
+  -H "apikey: 5DD598ABD764-474E-BCA4-53B1AC9FD4BD" | grep -E "connectionStatus|disconnection"
+
+# 2. Si hay error 401, reiniciar Evolution API desde Easypanel:
+#    - Ir a Easypanel → automation-evolution-api
+#    - Click en "Restart"
+#    - Esperar 2-3 minutos
+
+# 3. Cerrar sesión actual
+curl -X DELETE "https://automation-evolution-api.gnrjtm.easypanel.host/instance/logout/service_reloaded_otronumber" \
+  -H "apikey: 5DD598ABD764-474E-BCA4-53B1AC9FD4BD"
+
+# 4. Generar nuevo QR
+curl -X GET "https://automation-evolution-api.gnrjtm.easypanel.host/instance/connect/service_reloaded_otronumber" \
+  -H "apikey: 5DD598ABD764-474E-BCA4-53B1AC9FD4BD"
+
+# 5. Escanear QR con el teléfono correcto (51910364758)
+#    WhatsApp → Dispositivos vinculados → Vincular dispositivo
+```
+
+**Importante:**
+- Esperar 5-10 minutos entre intentos de reconexión si persiste el error
+- Asegurarse de que el número NO esté conectado en WhatsApp Web en otro lugar
+- Verificar que no haya otros dispositivos vinculados activos
+- El número que escanea el QR se convierte en el bot (no confundir con número personal)
+
 ## 📝 Commits y Despliegue
 
 ### Comandos Git
