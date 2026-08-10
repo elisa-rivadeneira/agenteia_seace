@@ -781,32 +781,18 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
                     print(f"⚠️ Error escaneando para IA: {e}")
                     return f"❌ Error al buscar oportunidades: {str(e)[:100]}"
 
-        # Respuestas básicas sin IA
-        if any(palabra in mensaje_lower for palabra in ['hola', 'buenas', 'saludo']):
-            return "👋 ¡Hola! Soy tu agente SEACE con IA. Pregúntame sobre oportunidades o usa /ayuda."
+        # Si llegamos aquí y hay IA, dejar que la IA maneje el mensaje
+        if self.agente_ia and self.agente_ia.activo and numero_usuario:
+            return self.agente_ia.consultar_configuracion(numero_usuario, mensaje)
 
-        elif any(palabra in mensaje_lower for palabra in ['urgente', 'urgent', 'pronto']):
-            return "🚨 Para ver oportunidades urgentes usa: /urgentes"
+        # Fallback sin IA
+        return f"""🤔 No entendí tu consulta: "{mensaje[:50]}..."
 
-        elif any(palabra in mensaje_lower for palabra in ['estado', 'funcionando', 'activo']):
-            return self.comando_estado()
-
-        elif any(palabra in mensaje_lower for palabra in ['ayuda', 'help', 'comandos']):
-            return self.comando_ayuda()
-
-        elif any(palabra in mensaje_lower for palabra in ['escanear', 'buscar', 'actualizar']):
-            return "🔍 Para buscar nuevas oportunidades usa: /escanear"
-
-        else:
-            return f"""🤔 No entendí tu consulta: "{mensaje[:50]}..."
-
-💡 *PUEDES PREGUNTAR:*
-• "¿Qué oportunidades hay en julio?"
-• "¿Cuáles me recomiendas?"
-• "Analiza las licitaciones"
-• O usar comandos como /escanear, /reporte
-
-Usa /ayuda para ver todos los comandos."""
+💡 *PUEDES USAR COMANDOS:*
+• /escanear - Buscar oportunidades
+• /configurar - Ver/modificar tu configuración
+• /missegmentos - Ver tus segmentos activos
+• /ayuda - Lista completa de comandos"""
 
     def procesar_comando(self, mensaje: str, numero_usuario: str = None) -> str:
         """Procesa un mensaje y devuelve respuesta"""
