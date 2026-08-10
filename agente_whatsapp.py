@@ -678,7 +678,8 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
                           'segmentos de', 'segmentos relacionados', 'busca segmentos',
                           'qué es el segmento', 'que es el segmento', 'segmento para',
                           'todos los segmentos', 'lista de segmentos', 'catálogo de segmentos',
-                          'segmentos disponibles', 'segmentos seace']
+                          'segmentos disponibles', 'segmentos seace', 'segmentos hay',
+                          'hay de segmentos', 'existen segmentos', 'segmentos tiene']
 
         if any(palabra in mensaje_lower for palabra in palabras_config):
             print(f"⚙️ ✅ CONSULTA DE CONFIGURACIÓN DETECTADA: '{mensaje[:80]}...'")
