@@ -669,11 +669,16 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
         """Procesa mensajes libres (no comandos)"""
         mensaje_lower = mensaje.lower()
 
-        # PRIORIDAD MÁXIMA: Detectar preguntas sobre configuración
+        # PRIORIDAD MÁXIMA: Detectar preguntas sobre configuración y catálogo de segmentos
         palabras_config = ['mi configuración', 'mi configuracion', 'mis segmentos', 'mi empresa',
                           'mis alertas', 'mi perfil', 'cambia', 'modifica', 'configura',
                           'qué segmentos', 'que segmentos', 'cuál es mi', 'cual es mi',
-                          'cómo está configurado', 'como esta configurado', 'mi cuenta']
+                          'cómo está configurado', 'como esta configurado', 'mi cuenta',
+                          'cuales son los segmentos', 'cuáles son los segmentos',
+                          'segmentos de', 'segmentos relacionados', 'busca segmentos',
+                          'qué es el segmento', 'que es el segmento', 'segmento para',
+                          'todos los segmentos', 'lista de segmentos', 'catálogo de segmentos',
+                          'segmentos disponibles', 'segmentos seace']
 
         if any(palabra in mensaje_lower for palabra in palabras_config):
             print(f"⚙️ ✅ CONSULTA DE CONFIGURACIÓN DETECTADA: '{mensaje[:80]}...'")

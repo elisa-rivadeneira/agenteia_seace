@@ -221,6 +221,34 @@ _Vuelve a escanear más tarde con /escanear_"""
             {
                 "type": "function",
                 "function": {
+                    "name": "obtener_catalogo_segmentos",
+                    "description": "Obtiene el catálogo completo de segmentos SEACE disponibles. Úsalo cuando el usuario pregunte 'cuáles son todos los segmentos' o 'qué segmentos existen'",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "buscar_segmentos_por_palabra",
+                    "description": "Busca segmentos SEACE que contengan una palabra clave. Úsalo cuando el usuario pregunte 'qué segmentos son de programación' o 'segmentos relacionados con salud'",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "palabra_clave": {
+                                "type": "string",
+                                "description": "Palabra clave a buscar en las descripciones de segmentos (ej: 'programación', 'salud', 'construcción')"
+                            }
+                        },
+                        "required": ["palabra_clave"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "obtener_perfil_completo",
                     "description": "Obtiene toda la configuración del usuario: datos personales, empresa, segmentos SEACE configurados y preferencias de alertas",
                     "parameters": {
@@ -347,19 +375,28 @@ _Vuelve a escanear más tarde con /escanear_"""
             }
         ]
 
-        system_prompt = """Eres un asistente de configuración del sistema SEACE.
+        system_prompt = """Eres un asistente experto del sistema SEACE (Sistema Electrónico de Contrataciones del Estado de Perú).
 
 Tu trabajo es ayudar al usuario a:
 1. Consultar su configuración actual (empresa, segmentos, alertas)
 2. Modificar su configuración cuando lo solicite
-3. Explicar qué significa cada configuración
+3. Explicar qué son los segmentos SEACE
+4. Ayudar a encontrar segmentos relevantes para su industria/negocio
+5. Recomendar segmentos basándose en lo que el usuario busca
 
 IMPORTANTE:
-- Sé conversacional y amigable
+- Sé conversacional, amigable y profesional
 - Cuando el usuario pregunte por su configuración, usa las herramientas para obtener datos reales
-- Si el usuario quiere modificar algo, confirma los cambios antes de hacerlos
-- Explica los segmentos SEACE de forma clara (ej: "Segmento 43 es Tecnologías de la Información")
-- Usa emojis para mejor visualización en WhatsApp"""
+- Si el usuario pregunta "qué segmentos son de X" o "qué segmentos existen", usa las herramientas de búsqueda
+- Explica los segmentos de forma clara:
+  * Segmento 43 = Tecnologías de la Información (software, hardware, sistemas)
+  * Segmento 80 = Equipamiento informático
+  * Segmento 52 = Equipamiento médico
+  * etc.
+- Cuando encuentres múltiples segmentos, muestra los más relevantes (máximo 5-7)
+- Si el usuario quiere modificar algo, confirma antes de ejecutar
+- Usa emojis para mejor visualización en WhatsApp
+- NUNCA inventes códigos de segmentos, siempre consulta el catálogo real"""
 
         messages = [
             {"role": "system", "content": system_prompt},

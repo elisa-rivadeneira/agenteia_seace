@@ -13,6 +13,61 @@ from database_mysql import (
     actualizar_configuracion_usuario
 )
 import json
+import os
+
+def obtener_catalogo_segmentos():
+    """
+    Obtiene el catálogo completo de segmentos SEACE
+
+    Returns:
+        dict con todos los segmentos disponibles
+    """
+    try:
+        # Intentar cargar desde static/segmentos_seace.json
+        ruta = 'static/segmentos_seace.json'
+        if not os.path.exists(ruta):
+            ruta = '/app/static/segmentos_seace.json'
+
+        with open(ruta, 'r', encoding='utf-8') as f:
+            catalogo = json.load(f)
+
+        return {
+            "total_segmentos": len(catalogo),
+            "segmentos": catalogo
+        }
+    except Exception as e:
+        return {"error": f"No se pudo cargar el catálogo: {str(e)}"}
+
+def buscar_segmentos_por_palabra(palabra_clave):
+    """
+    Busca segmentos SEACE que contengan una palabra clave
+
+    Args:
+        palabra_clave: Palabra a buscar (ej: "programación", "salud", "construcción")
+
+    Returns:
+        dict con segmentos que coinciden
+    """
+    try:
+        catalogo_result = obtener_catalogo_segmentos()
+        if "error" in catalogo_result:
+            return catalogo_result
+
+        catalogo = catalogo_result["segmentos"]
+        palabra_lower = palabra_clave.lower()
+
+        resultados = {}
+        for codigo, descripcion in catalogo.items():
+            if palabra_lower in descripcion.lower():
+                resultados[codigo] = descripcion
+
+        return {
+            "palabra_buscada": palabra_clave,
+            "total_encontrados": len(resultados),
+            "segmentos_encontrados": resultados
+        }
+    except Exception as e:
+        return {"error": f"Error en búsqueda: {str(e)}"}
 
 def obtener_perfil_completo(numero_telefono):
     """
@@ -224,6 +279,8 @@ def modificar_configuracion_alertas(numero_telefono, **kwargs):
 
 # Diccionario de funciones disponibles para el agente
 HERRAMIENTAS_DB = {
+    "obtener_catalogo_segmentos": obtener_catalogo_segmentos,
+    "buscar_segmentos_por_palabra": buscar_segmentos_por_palabra,
     "obtener_perfil_completo": obtener_perfil_completo,
     "consultar_segmentos_usuario": consultar_segmentos_usuario,
     "consultar_empresa_usuario": consultar_empresa_usuario,
