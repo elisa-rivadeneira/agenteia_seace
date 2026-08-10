@@ -666,47 +666,26 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
             return f"⚠️ El segmento *{codigo}* ya estaba en tu lista"
 
     def procesar_mensaje_libre(self, mensaje: str, numero_usuario=None) -> str:
-        """Procesa mensajes libres (no comandos)"""
+        """Procesa mensajes libres usando IA para entender la intención"""
         mensaje_lower = mensaje.lower()
 
-        # PRIORIDAD MÁXIMA: Detectar preguntas sobre configuración y catálogo de segmentos
-        palabras_config = ['mi configuración', 'mi configuracion', 'mis segmentos', 'mi empresa',
-                          'mis alertas', 'mi perfil', 'cambia', 'modifica', 'configura',
-                          'qué segmentos', 'que segmentos', 'cuál es mi', 'cual es mi',
-                          'cómo está configurado', 'como esta configurado', 'mi cuenta',
-                          'cuales son los segmentos', 'cuáles son los segmentos',
-                          'segmentos de', 'segmentos relacionados', 'busca segmentos',
-                          'qué es el segmento', 'que es el segmento', 'segmento para',
-                          'todos los segmentos', 'lista de segmentos', 'catálogo de segmentos',
-                          'segmentos disponibles', 'segmentos seace', 'segmentos hay',
-                          'hay de segmentos', 'existen segmentos', 'segmentos tiene']
+        # Si hay agente IA activo, usarlo para TODAS las consultas
+        if self.agente_ia and self.agente_ia.activo and numero_usuario:
+            # La IA decidirá si es sobre configuración, segmentos, oportunidades, etc.
+            print(f"🤖 IA procesando mensaje: '{mensaje[:80]}...'")
 
-        if any(palabra in mensaje_lower for palabra in palabras_config):
-            print(f"⚙️ ✅ CONSULTA DE CONFIGURACIÓN DETECTADA: '{mensaje[:80]}...'")
-            if self.agente_ia and self.agente_ia.activo and numero_usuario:
+            # Primero intentar con consulta de configuración (maneja segmentos, empresa, alertas)
+            # Si la pregunta NO es sobre oportunidades/licitaciones
+            palabras_oportunidades = ['oportunidad', 'licitacion', 'licitación', 'convocatoria',
+                                     'concurso', 'tender', 'propuesta', 'bid']
+
+            es_sobre_oportunidades = any(palabra in mensaje_lower for palabra in palabras_oportunidades)
+
+            if not es_sobre_oportunidades:
+                # Probablemente es sobre configuración/segmentos
                 return self.agente_ia.consultar_configuracion(numero_usuario, mensaje)
-            else:
-                return """⚙️ Para consultar tu configuración, usa:
 
-• `/missegmentos` - Ver tus segmentos activos
-• `/configurar` - Panel de configuración completo
-• `/ayuda` - Lista de todos los comandos"""
-
-        # PRIORIDAD ALTA: Detectar Excel
-        palabras_excel = ['excel', 'exportar', 'exporta', 'descarga', 'xls', 'xlsx']
-        if any(palabra in mensaje_lower for palabra in palabras_excel):
-            print(f"📊 ✅ EXCEL DETECTADO: '{mensaje[:80]}...'")
-            print(f"📊 Ejecutando comando_excel() directamente")
-            return self.comando_excel("")
-
-        # PRIORIDAD ALTA: Detectar "envíame/mándame archivo"
-        if any(verbo in mensaje_lower for verbo in ['envíame', 'enviame', 'mándame', 'mandame', 'envía', 'envia', 'manda']):
-            if any(sustantivo in mensaje_lower for sustantivo in ['archivo', 'documento', 'reporte', 'hoja']):
-                print(f"📊 ✅ SOLICITUD DE ARCHIVO DETECTADA: '{mensaje[:80]}...'")
-                print(f"📊 Ejecutando comando_excel() directamente")
-                return self.comando_excel("")
-
-        # Si hay agente IA y parece una pregunta sobre oportunidades, ESCANEAR y usar IA
+        # Si hay agente IA y parece pregunta sobre oportunidades
         if self.agente_ia and self.agente_ia.activo:
             # Detectar si pide detalle de una oportunidad específica
             # Acepta: "6", "la 2", "el 4", "oportunidad 4", "detallame la 2", "háblame del 3", "dime sobre el 5"
