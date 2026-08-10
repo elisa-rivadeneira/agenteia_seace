@@ -1469,4 +1469,4 @@ def iniciar_servidor():
     app.run(host='0.0.0.0', port=5000, debug=False)
 
 if __name__ == "__main__":
-    iniciar_servidor()
+    iniciar_servidor()# Force rebuild Mon Aug 10 06:55:15 PM -05 2026
