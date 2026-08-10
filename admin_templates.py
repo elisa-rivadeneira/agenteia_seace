@@ -176,7 +176,7 @@ LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Login - SEACE Bot</title>
+    <title>Adminn Loginnnnnn - SEACE Bot</title>
     <meta charset="UTF-8">
     """ + SHARED_CSS + """
     <style>
@@ -249,10 +249,9 @@ DASHBOARD_HTML = """
 </head>
 <body>
     <div class="header">
-        <h1>🤖 SEACE Bot - Dashboard</h1>
+        <h1><a href="/admin" style="color: white; text-decoration: none;">🤖 SEACE Bot - Gestión de Usuarios</a></h1>
         <div class="header-links">
-            <a href="/admin/usuarios">👥 Usuarios</a>
-            <a href="/admin/alertas">⏰ Alertas</a>
+            <a href="/admin/usuarios">⚙️ Configuración</a>
             <a href="/admin/logout">Cerrar sesión</a>
         </div>
     </div>
@@ -316,10 +315,9 @@ USUARIOS_HTML = """
 </head>
 <body>
     <div class="header">
-        <h1>👥 Gestión de Usuarios</h1>
+        <h1><a href="/admin" style="color: white; text-decoration: none;">🤖 SEACE Bot</a> - 👥 Usuarios</h1>
         <div class="header-links">
             <a href="/admin">← Dashboard</a>
-            <a href="/admin/alertas">⏰ Alertas</a>
             <a href="/admin/logout">Cerrar sesión</a>
         </div>
     </div>
@@ -339,6 +337,7 @@ USUARIOS_HTML = """
                         <th>Nombre</th>
                         <th>Número</th>
                         <th>Email</th>
+                        <th>Segmentos</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -351,16 +350,27 @@ USUARIOS_HTML = """
                         <td>{{ usuario.numero }}</td>
                         <td>{{ usuario.email or '-' }}</td>
                         <td>
+                            {% if usuario.segmentos %}
+                                <span class="badge badge-active">{{ usuario.segmentos|length }} configurados</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Sin configurar</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             <span class="badge {% if usuario.activo %}badge-active{% else %}badge-inactive{% endif %}">
                                 {% if usuario.activo %}ACTIVO{% else %}INACTIVO{% endif %}
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;"
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; margin: 2px;"
+                                    onclick='abrirConfiguracion("{{ usuario.numero }}", "{{ usuario.nombre }}", {{ (usuario.segmentos or []) | tojson }})'>
+                                ⚙️ Configuración
+                            </button>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px; margin: 2px;"
                                     onclick="toggleUsuario('{{ usuario.numero }}', {{ 'false' if usuario.activo else 'true' }})">
                                 {% if usuario.activo %}Desactivar{% else %}Activar{% endif %}
                             </button>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;"
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin: 2px;"
                                     onclick="eliminarUsuario('{{ usuario.numero }}')">
                                 Eliminar
                             </button>
@@ -470,7 +480,344 @@ USUARIOS_HTML = """
                 location.reload();
             });
         }
+
+        function abrirConfiguracion(numero, nombre, segmentosActuales) {
+            const modal = document.getElementById('modalConfiguracion');
+            document.getElementById('nombreUsuarioConfig').textContent = nombre;
+            document.getElementById('numeroUsuarioConfig').value = numero;
+
+            fetch('/static/segmentos_seace.json')
+            .then(r => r.json())
+            .then(segmentosDisponibles => {
+                mostrarCheckboxesSegmentos(segmentosDisponibles, segmentosActuales);
+            });
+
+            Promise.all([
+                fetch('/admin/usuarios/obtener-configuracion', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({numero})
+                }).then(r => r.json()),
+
+                fetch('/admin/usuarios/obtener-empresa', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({numero})
+                }).then(r => r.json())
+            ]).then(([configData, empresaData]) => {
+                if (configData.success) {
+                    document.getElementById('alertas_realtime_activas').checked = configData.config.alertas_realtime_activas;
+                    document.getElementById('alertas_programadas_activas').checked = configData.config.alertas_programadas_activas;
+                    document.getElementById('score_minimo').value = configData.config.score_minimo;
+                    document.getElementById('max_oportunidades').value = configData.config.max_oportunidades_alerta;
+
+                    const horarios = configData.config.horarios_alertas || [];
+                    document.querySelectorAll('.horario-check').forEach(checkbox => {
+                        checkbox.checked = horarios.includes(checkbox.value);
+                    });
+
+                    const dias = configData.config.dias_semana || [];
+                    document.querySelectorAll('.dia-check').forEach(checkbox => {
+                        checkbox.checked = dias.includes(checkbox.value);
+                    });
+                }
+
+                if (empresaData.success && empresaData.empresa) {
+                    document.getElementById('empresa_nombre').value = empresaData.empresa.nombre || '';
+                    document.getElementById('empresa_ruc').value = empresaData.empresa.ruc || '';
+                    document.getElementById('palabras_positivas').value = (empresaData.empresa.palabras_positivas || []).join(', ');
+                    document.getElementById('palabras_negativas').value = (empresaData.empresa.palabras_negativas || []).join(', ');
+                }
+            });
+
+            modal.style.display = 'block';
+        }
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('content-' + tab).classList.add('active');
+        }
+
+        function mostrarCheckboxesSegmentos(segmentosDisponibles, segmentosActuales) {
+
+            const container = document.getElementById('checkboxesSegmentos');
+            container.innerHTML = '';
+
+            segmentosDisponibles.forEach(seg => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '10px';
+                div.style.padding = '8px';
+                div.style.borderBottom = '1px solid #eee';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `seg_${seg.codigo}`;
+                checkbox.value = seg.codigo;
+                checkbox.checked = segmentosActuales.includes(seg.codigo);
+
+                const label = document.createElement('label');
+                label.htmlFor = `seg_${seg.codigo}`;
+                label.innerHTML = `<strong>${seg.codigo}</strong> - ${seg.nombre} <span style="color: #666; font-size: 12px;">(${seg.tipo})</span>`;
+                label.style.marginLeft = '8px';
+                label.style.cursor = 'pointer';
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        }
+
+        function cerrarModalConfig() {
+            document.getElementById('modalConfiguracion').style.display = 'none';
+        }
+
+        function guardarConfiguracion() {
+            const numero = document.getElementById('numeroUsuarioConfig').value;
+            const checkboxes = document.querySelectorAll('#checkboxesSegmentos input[type=checkbox]:checked');
+            const segmentos = Array.from(checkboxes).map(cb => cb.value);
+
+            const alertas_realtime_activas = document.getElementById('alertas_realtime_activas').checked;
+            const alertas_programadas_activas = document.getElementById('alertas_programadas_activas').checked;
+            const score_minimo = parseInt(document.getElementById('score_minimo').value);
+            const max_oportunidades = parseInt(document.getElementById('max_oportunidades').value);
+
+            const horarios_checks = document.querySelectorAll('.horario-check:checked');
+            const horarios_alertas = Array.from(horarios_checks).map(cb => cb.value);
+
+            const dias_checks = document.querySelectorAll('.dia-check:checked');
+            const dias_semana = Array.from(dias_checks).map(cb => cb.value);
+
+            const palabras_positivas_text = document.getElementById('palabras_positivas').value;
+            const palabras_negativas_text = document.getElementById('palabras_negativas').value;
+
+            const palabras_positivas = palabras_positivas_text
+                .split(',')
+                .map(p => p.trim())
+                .filter(p => p.length > 0);
+
+            const palabras_negativas = palabras_negativas_text
+                .split(',')
+                .map(p => p.trim())
+                .filter(p => p.length > 0);
+
+            const empresa = {
+                nombre: document.getElementById('empresa_nombre').value,
+                ruc: document.getElementById('empresa_ruc').value,
+                palabras_positivas,
+                palabras_negativas
+            };
+
+            fetch('/admin/usuarios/guardar-configuracion', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    numero,
+                    segmentos,
+                    alertas_realtime_activas,
+                    alertas_programadas_activas,
+                    score_minimo,
+                    max_oportunidades,
+                    horarios_alertas,
+                    dias_semana,
+                    empresa
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Configuración guardada correctamente');
+                    location.reload();
+                } else {
+                    alert('❌ Error al guardar configuración');
+                }
+            });
+        }
     </script>
+
+    <!-- Modal Configuración de Usuario -->
+    <div id="modalConfiguracion" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>⚙️ Configuración - <span id="nombreUsuarioConfig"></span></h2>
+                <span class="close" onclick="cerrarModalConfig()">&times;</span>
+            </div>
+            <input type="hidden" id="numeroUsuarioConfig">
+
+            <!-- Pestañas -->
+            <div style="display: flex; border-bottom: 2px solid #667eea; margin-bottom: 20px;">
+                <button class="tab-btn active" onclick="cambiarTab('segmentos')" id="tab-segmentos">
+                    📊 Segmentos
+                </button>
+                <button class="tab-btn" onclick="cambiarTab('alertas')" id="tab-alertas">
+                    🔔 Alertas
+                </button>
+                <button class="tab-btn" onclick="cambiarTab('empresa')" id="tab-empresa">
+                    🏢 Empresa
+                </button>
+            </div>
+
+            <!-- Contenido Pestañas -->
+            <div id="content-segmentos" class="tab-content active">
+                <p style="color: #666; margin-bottom: 15px;">Selecciona los segmentos SEACE que deseas monitorear:</p>
+                <div id="checkboxesSegmentos" style="max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+            </div>
+
+            <div id="content-alertas" class="tab-content">
+                <!-- Alertas en Tiempo Real -->
+                <div style="border: 2px solid #667eea; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; color: #667eea;">⚡ Alertas en Tiempo Real</h3>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <input type="checkbox" id="alertas_realtime_activas" style="margin-right: 10px; width: 20px; height: 20px;">
+                            <span style="font-weight: bold;">Activar alertas instantáneas</span>
+                        </label>
+                        <p style="color: #666; font-size: 13px; margin-left: 30px;">
+                            Recibirás una notificación inmediata cuando aparezca una nueva convocatoria en tus segmentos.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Alertas Programadas -->
+                <div style="border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; color: #f59e0b;">📅 Alertas Programadas</h3>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <input type="checkbox" id="alertas_programadas_activas" style="margin-right: 10px; width: 20px; height: 20px;">
+                            <span style="font-weight: bold;">Activar alertas diarias</span>
+                        </label>
+                        <p style="color: #666; font-size: 13px; margin-left: 30px;">
+                            Recibirás un resumen de oportunidades en horarios específicos.
+                        </p>
+                    </div>
+
+                    <div class="form-group" id="horarios_container">
+                        <label style="font-weight: bold;">Horarios de envío</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="horario-check" value="10:00" style="margin-right: 5px;"> 10:00 AM
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="horario-check" value="19:00" style="margin-right: 5px;"> 7:00 PM
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="horario-check" value="12:00" style="margin-right: 5px;"> 12:00 PM
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="horario-check" value="15:00" style="margin-right: 5px;"> 3:00 PM
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-weight: bold;">Días de la semana</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="L" style="margin-right: 5px;"> Lunes
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="M" style="margin-right: 5px;"> Martes
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="X" style="margin-right: 5px;"> Miércoles
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="J" style="margin-right: 5px;"> Jueves
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="V" style="margin-right: 5px;"> Viernes
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="S" style="margin-right: 5px;"> Sábado
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" class="dia-check" value="D" style="margin-right: 5px;"> Domingo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración Común -->
+                <div style="border: 2px solid #10b981; border-radius: 8px; padding: 15px;">
+                    <h3 style="margin-top: 0; color: #10b981;">⚙️ Configuración General</h3>
+                    <div class="form-group">
+                        <label>Score mínimo de compatibilidad (%)</label>
+                        <input type="number" id="score_minimo" min="0" max="100" value="30" style="width: 100px;">
+                        <p style="color: #666; font-size: 13px; margin-top: 5px;">
+                            Solo recibirás alertas de oportunidades con score igual o mayor a este valor.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Máximo de oportunidades por alerta</label>
+                        <input type="number" id="max_oportunidades" min="1" max="20" value="5" style="width: 100px;">
+                        <p style="color: #666; font-size: 13px; margin-top: 5px;">
+                            Para alertas programadas: cantidad de oportunidades a incluir (Top N).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-empresa" class="tab-content">
+                <h3 style="color: #667eea; margin-top: 0;">📝 Información de la Empresa</h3>
+                <div class="form-group">
+                    <label>Nombre de la empresa</label>
+                    <input type="text" id="empresa_nombre" style="width: 100%;" placeholder="Ej: SOLUCIONES TECNOLÓGICAS S.A.C">
+                </div>
+
+                <div class="form-group">
+                    <label>RUC</label>
+                    <input type="text" id="empresa_ruc" style="width: 200px;" placeholder="20512345678" maxlength="11">
+                </div>
+
+                <h3 style="color: #10b981; margin-top: 30px;">✅ Palabras Clave Positivas (+5 pts c/u)</h3>
+                <p style="color: #666; font-size: 13px;">Separa las palabras con comas. Estas palabras aumentan el score de compatibilidad.</p>
+                <textarea id="palabras_positivas" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="software, sistema, desarrollo, servidor, tecnología, base de datos..."></textarea>
+
+                <h3 style="color: #ef4444; margin-top: 20px;">❌ Palabras Clave Negativas (-10 pts c/u)</h3>
+                <p style="color: #666; font-size: 13px;">Separa las palabras con comas. Estas palabras reducen el score de compatibilidad.</p>
+                <textarea id="palabras_negativas" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="construcción, obra civil, medicamentos, vehículos, mobiliario..."></textarea>
+
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                    <p style="margin: 0; font-size: 13px; color: #666;">
+                        <strong>💡 Tip:</strong> Las palabras clave determinan qué tan relevante es una oportunidad para tu empresa.
+                        Mientras más palabras positivas encuentre en la convocatoria, mayor será el score de compatibilidad.
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="guardarConfiguracion()" style="margin-top: 20px;">💾 Guardar Configuración</button>
+        </div>
+    </div>
+
+    <style>
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            background: #e0e0e0;
+        }
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </body>
 </html>
 """
@@ -486,10 +833,10 @@ ALERTAS_HTML = """
 </head>
 <body>
     <div class="header">
-        <h1>⏰ Gestión de Alertas</h1>
+        <h1><a href="/admin" style="color: white; text-decoration: none;">🤖 SEACE Bot</a> - ⏰ Alertas</h1>
         <div class="header-links">
             <a href="/admin">← Dashboard</a>
-            <a href="/admin/usuarios">👥 Usuarios</a>
+            <a href="/admin/usuarios">⚙️ Configuración</a>
             <a href="/admin/logout">Cerrar sesión</a>
         </div>
     </div>

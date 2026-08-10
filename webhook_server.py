@@ -566,12 +566,19 @@ ADMIN_DASHBOARD_HTML = """
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .header h1 { font-size: 20px; }
-        .header .logout {
+        .header a {
             color: white;
             text-decoration: none;
             background: rgba(255,255,255,0.2);
             padding: 8px 15px;
             border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .header a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .header a:visited {
+            color: white;
         }
         .main-container {
             display: flex;
@@ -709,7 +716,7 @@ ADMIN_DASHBOARD_HTML = """
     <div class="header">
         <h1>🤖 SEACE Bot - Admin Dashboard</h1>
         <div>
-            <a href="/admin/alertas" style="margin-right: 10px;">⏰ Alertas</a>
+            <a href="/admin/usuarios" style="margin-right: 10px;">⚙️ Configuración</a>
             <a href="/admin/logout" class="logout">Cerrar sesión</a>
         </div>
     </div>
