@@ -1,12 +1,12 @@
 -- Script SQL para inicializar base de datos SEACE Monitor
--- Ejecutar con: mysql -u root -p123456 < setup_database.sql
+-- Ejecutar con: mysql -u mariadb -p'Bismillah19*' < setup_database.sql
 
 -- Crear base de datos
-CREATE DATABASE IF NOT EXISTS seace_monitor
+CREATE DATABASE IF NOT EXISTS agenteseace
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE seace_monitor;
+USE agenteseace;
 
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -69,5 +69,5 @@ INSERT INTO usuarios (numero, nombre, email, activo) VALUES
 ('51988776655', 'Ana Torres', '', TRUE)
 ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 
-SELECT '✅ Base de datos seace_monitor creada correctamente' AS status;
+SELECT '✅ Base de datos agenteseace creada correctamente' AS status;
 SELECT CONCAT('📊 Total usuarios: ', COUNT(*)) AS info FROM usuarios;
