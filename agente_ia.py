@@ -676,6 +676,7 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
             # Obtener segmentos del usuario (database_mysql requiere usuario_id)
             segmentos_usuario = obtener_segmentos_usuario(usuario['id'])
             print(f"🔍 [detectar_segmento] Segmentos obtenidos de MySQL: {segmentos_usuario}")
+            print(f"🔍 [detectar_segmento] Tipo de segmentos: {[type(s) for s in segmentos_usuario]}")
 
             if not segmentos_usuario:
                 return {
@@ -690,6 +691,9 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
                 for codigo in segmentos_usuario
             ])
 
+            # Crear lista explícita de códigos para validación
+            lista_codigos = ", ".join([f'"{codigo}"' for codigo in segmentos_usuario])
+
             # Prompt para la IA
             system_prompt = """Eres un asistente que detecta qué segmento SEACE quiere consultar el usuario.
 
@@ -703,12 +707,15 @@ IMPORTANTE:
 - Si el usuario dice "del 81", "en el 86", "segmento 43", "código 80" → extrae ese número
 - Solo acepta segmentos que estén en la lista del usuario
 - Si no menciona segmento, usa el PRIMERO de la lista
-- Si menciona un segmento que NO tiene, indica que no está configurado"""
+- Si menciona un segmento que NO tiene, indica que no está configurado
+- Para validar si un segmento está configurado, verifica si el CÓDIGO EXACTO está en la lista de códigos disponibles"""
 
             user_prompt = f"""Mensaje del usuario: "{mensaje_usuario}"
 
 Segmentos configurados del usuario:
 {segmentos_info}
+
+CÓDIGOS VÁLIDOS (para validación): [{lista_codigos}]
 
 Responde en JSON con este formato:
 {{
@@ -747,18 +754,39 @@ O si mencionó un segmento no configurado:
             resultado = json.loads(response.choices[0].message.content)
             print(f"🤖 IA detectó segmento: {resultado}")
 
-            if not resultado.get("esta_configurado", True):
-                return {
-                    "segmento": None,
-                    "encontrado": False,
-                    "mensaje_error": f"⚠️ El segmento *{resultado.get('segmento_detectado')}* no está en tu configuración.\n\nTus segmentos activos: {', '.join(segmentos_usuario)}\n\nUsa `/agregarsegmento {resultado.get('segmento_detectado')}` para agregarlo."
-                }
+            # VALIDACIÓN EN PYTHON (no confiar 100% en la IA)
+            segmento_detectado = resultado.get("segmento_detectado")
 
-            return {
-                "segmento": resultado.get("usar_segmento"),
-                "encontrado": True,
-                "razon": resultado.get("razon", "")
-            }
+            # Si la IA detectó un segmento específico, validar que esté en la lista
+            if segmento_detectado:
+                # Normalizar para comparación (convertir a string)
+                segmento_detectado_str = str(segmento_detectado)
+                segmentos_usuario_str = [str(s) for s in segmentos_usuario]
+
+                print(f"🔍 [validación] Segmento detectado: '{segmento_detectado_str}'")
+                print(f"🔍 [validación] Segmentos usuario: {segmentos_usuario_str}")
+                print(f"🔍 [validación] ¿Está en lista? {segmento_detectado_str in segmentos_usuario_str}")
+
+                if segmento_detectado_str not in segmentos_usuario_str:
+                    return {
+                        "segmento": None,
+                        "encontrado": False,
+                        "mensaje_error": f"⚠️ El segmento *{segmento_detectado}* no está en tu configuración.\n\nTus segmentos activos: {', '.join(segmentos_usuario)}\n\nUsa `/agregarsegmento {segmento_detectado}` para agregarlo."
+                    }
+
+                # Segmento válido
+                return {
+                    "segmento": segmento_detectado_str,
+                    "encontrado": True,
+                    "razon": resultado.get("razon", "")
+                }
+            else:
+                # No mencionó segmento, usar el primero
+                return {
+                    "segmento": str(segmentos_usuario[0]),
+                    "encontrado": True,
+                    "razon": resultado.get("razon", "Usando primer segmento por defecto")
+                }
 
         except Exception as e:
             print(f"❌ Error detectando segmento: {e}")

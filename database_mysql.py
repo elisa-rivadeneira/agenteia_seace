@@ -572,6 +572,27 @@ def actualizar_configuracion_usuario(usuario_id: int, **kwargs) -> bool:
         print(f"❌ Error al actualizar configuración: {e}")
         return False
 
+# ===== CATÁLOGO DE SEGMENTOS =====
+
+# Catálogo de segmentos SEACE
+SEGMENTOS_SEACE = {
+    "43": "Tecnologías de la Información",
+    "80": "Servicios profesionales y consultoría",
+    "81": "Investigación y desarrollo",
+    "72": "Arquitectura e ingeniería",
+    "42": "Equipos médicos y laboratorio",
+    "44": "Equipos de oficina y computación",
+    "45": "Equipos de telecomunicaciones",
+    "76": "Servicios de limpieza",
+    "77": "Servicios de seguridad",
+    "78": "Servicios de mantenimiento",
+    "86": "Educación y formación"
+}
+
+def obtener_nombre_segmento(codigo: str) -> str:
+    """Obtiene el nombre de un segmento por su código"""
+    return SEGMENTOS_SEACE.get(codigo, f"Segmento {codigo}")
+
 if __name__ == "__main__":
     print("🔧 Inicializando base de datos...")
     inicializar_bd()
