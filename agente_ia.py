@@ -424,11 +424,20 @@ IMPORTANTE:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
 
-                    # Inyectar el número de usuario si no está en los argumentos
-                    if "numero_telefono" in function_args and not function_args["numero_telefono"]:
-                        function_args["numero_telefono"] = numero_usuario
-                    elif "numero_telefono" not in function_args:
-                        function_args["numero_telefono"] = numero_usuario
+                    # Inyectar el número de usuario solo si la función lo necesita
+                    funciones_que_necesitan_numero = [
+                        "obtener_perfil_completo",
+                        "consultar_segmentos_usuario",
+                        "consultar_empresa_usuario",
+                        "consultar_configuracion_alertas",
+                        "modificar_segmentos",
+                        "modificar_empresa",
+                        "modificar_configuracion_alertas"
+                    ]
+
+                    if function_name in funciones_que_necesitan_numero:
+                        if "numero_telefono" not in function_args or not function_args["numero_telefono"]:
+                            function_args["numero_telefono"] = numero_usuario
 
                     # Ejecutar la función
                     function_response = HERRAMIENTAS_DB[function_name](**function_args)
