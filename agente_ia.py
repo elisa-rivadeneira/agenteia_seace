@@ -235,6 +235,23 @@ _Vuelve a escanear más tarde con /escanear_"""
             {
                 "type": "function",
                 "function": {
+                    "name": "buscar_segmento_por_codigo",
+                    "description": "Busca un segmento SEACE específico por su código numérico. Úsalo cuando el usuario pregunte 'qué es el segmento 77' o 'de qué es el segmento 43'",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "codigo": {
+                                "type": "string",
+                                "description": "Código numérico del segmento (ej: '43', '77', '86')"
+                            }
+                        },
+                        "required": ["codigo"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "buscar_segmentos_por_palabra",
                     "description": "Busca segmentos SEACE que contengan una palabra clave. Úsalo cuando el usuario pregunte 'qué segmentos son de programación' o 'segmentos relacionados con salud'",
                     "parameters": {

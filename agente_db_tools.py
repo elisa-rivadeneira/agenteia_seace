@@ -41,6 +41,39 @@ def obtener_catalogo_segmentos():
     except Exception as e:
         return {"error": f"No se pudo cargar el catálogo: {str(e)}"}
 
+def buscar_segmento_por_codigo(codigo):
+    """
+    Busca un segmento SEACE específico por su código
+
+    Args:
+        codigo: Código del segmento (ej: "43", "77", "86")
+
+    Returns:
+        dict con información del segmento
+    """
+    try:
+        catalogo_result = obtener_catalogo_segmentos()
+        if "error" in catalogo_result:
+            return catalogo_result
+
+        catalogo = catalogo_result["segmentos"]
+        codigo_str = str(codigo)
+
+        if codigo_str in catalogo:
+            return {
+                "encontrado": True,
+                "codigo": codigo_str,
+                "nombre": catalogo[codigo_str]
+            }
+        else:
+            return {
+                "encontrado": False,
+                "codigo": codigo_str,
+                "mensaje": f"No se encontró el segmento {codigo_str}"
+            }
+    except Exception as e:
+        return {"error": f"Error en búsqueda: {str(e)}"}
+
 def buscar_segmentos_por_palabra(palabra_clave):
     """
     Busca segmentos SEACE que contengan una palabra clave
@@ -283,6 +316,7 @@ def modificar_configuracion_alertas(numero_telefono, **kwargs):
 # Diccionario de funciones disponibles para el agente
 HERRAMIENTAS_DB = {
     "obtener_catalogo_segmentos": obtener_catalogo_segmentos,
+    "buscar_segmento_por_codigo": buscar_segmento_por_codigo,
     "buscar_segmentos_por_palabra": buscar_segmentos_por_palabra,
     "obtener_perfil_completo": obtener_perfil_completo,
     "consultar_segmentos_usuario": consultar_segmentos_usuario,
