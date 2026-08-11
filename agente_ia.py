@@ -638,6 +638,12 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
         Returns:
             dict: {"segmento": "81", "encontrado": True} o {"segmento": None, "encontrado": False, "mensaje_error": "..."}
         """
+        print("=" * 80)
+        print("🚨 DETECTAR_SEGMENTO_SOLICITADO EJECUTÁNDOSE - CÓDIGO NUEVO v2")
+        print(f"🚨 Mensaje: {mensaje_usuario}")
+        print(f"🚨 Número recibido: {numero_usuario}")
+        print("=" * 80)
+
         if not self.activo:
             return {"segmento": None, "encontrado": False, "mensaje_error": "IA no disponible"}
 

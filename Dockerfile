@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Clear any Python cache before copying
+RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+RUN find /app -type f -name "*.pyc" -delete 2>/dev/null || true
+
 # Copy only necessary application files
 COPY webhook_server.py .
 COPY agente_whatsapp.py .
