@@ -4,6 +4,22 @@
 
 Sistema inteligente de monitoreo de oportunidades de licitaciones públicas peruanas del portal SEACE (Sistema Electrónico de Contrataciones del Estado), con integración de IA para análisis conversacional vía WhatsApp.
 
+## 📖 Historia del Proyecto
+
+**Cliente:** SOLUCIONES TECNOLÓGICAS INTEGRALES S.A.C necesitaba automatizar la búsqueda diaria de licitaciones en SEACE, un proceso que les tomaba 30-60 minutos diarios.
+
+**Desafío:** Monitorear múltiples segmentos de licitaciones públicas, detectar NUEVAS oportunidades automáticamente, y recibir alertas inteligentes sin revisar manualmente el portal cada día.
+
+**Desarrollo:**
+- **Inicio:** 01 Mayo 2026
+- **Primera fase:** Mayo 2026 (sistema base con IA)
+- **Pausa estratégica:** Junio - Julio 2026 (2 meses)
+- **Segunda fase:** Agosto 2026 (sistema de alertas automáticas)
+- **Lanzamiento v3.0:** 11 Agosto 2026
+- **Tiempo activo:** ~20-25 horas distribuidas en 3+ meses
+
+**Resultado:** Sistema completamente automatizado que ahorra 1+ hora diaria al cliente, con alertas en tiempo real de nuevas oportunidades vía WhatsApp.
+
 ## 🏢 Empresa Cliente
 
 **SOLUCIONES TECNOLÓGICAS INTEGRALES S.A.C**
@@ -401,14 +417,29 @@ git push origin main
 
 ## 📅 Historial de Versiones
 
-- **v1.0** - Sistema básico con extractor y comandos
-- **v2.0** - Integración OpenAI GPT-4o-mini
-- **v2.1** - Escaneo automático proactivo
-- **v2.2** - Corrección formato WhatsApp markdown
-- **v2.3** - Links directos a SEACE
-- **v2.4** - Optimización de prompts y fechas críticas
-- **v2.5** - Sistema de alertas automáticas (10am y 7pm) con detección de oportunidades nuevas
-- **v2.6** - Exportación a Excel y envío por WhatsApp vía Evolution API
+### Timeline de Desarrollo
+- **Inicio:** 01 de Mayo 2026
+- **Pausa:** Junio - Julio 2026 (2 meses)
+- **Retomado:** Agosto 2026
+- **v1.0 Completada:** 11 de Agosto 2026
+- **Tiempo activo de desarrollo:** ~20-25 horas distribuidas en 3+ meses
+
+### Versiones
+- **v1.0** (Mayo 2026) - Sistema básico con extractor y comandos
+- **v2.0** (Mayo 2026) - Integración OpenAI GPT-4o-mini
+- **v2.1** (Mayo 2026) - Escaneo automático proactivo
+- **v2.2** (Mayo 2026) - Corrección formato WhatsApp markdown
+- **v2.3** (Mayo 2026) - Links directos a SEACE
+- **v2.4** (Mayo 2026) - Optimización de prompts y fechas críticas
+- **v2.5** (Julio 2026) - Sistema de alertas automáticas (10am y 7pm) con detección de oportunidades nuevas
+- **v2.6** (Julio 2026) - Exportación a Excel y envío por WhatsApp vía Evolution API
+- **v3.0** (Agosto 2026) - Sistema completo de alertas de nuevas oportunidades
+  - Base de datos MySQL multi-tenant
+  - Comando `/init` con historial base
+  - Monitor automático cada 30 minutos
+  - Excel multi-sheet por segmento
+  - Detección inteligente de segmentos con IA
+  - Sistema de tracking de oportunidades nuevas vs vistas
 
 ## 🔐 Seguridad
 
@@ -425,6 +456,10 @@ Envía cualquier mensaje o comando para interactuar con el agente IA.
 
 ---
 
-**Última actualización:** 2026-07-24
+**Última actualización:** 11 de Agosto 2026
+**Versión:** 3.0 (Primera versión completa en producción)
 **Generado con:** Claude Code
 **Repositorio:** https://github.com/elisa-rivadeneira/agenteia_seace
+**Desarrollado por:** Elisa Rivadeneira
+**Período:** Mayo - Agosto 2026 (con pausa de 2 meses)
+**Horas activas:** ~20-25 horas de desarrollo
