@@ -28,6 +28,7 @@ COPY conversaciones_logger.py .
 COPY alertas_manager.py .
 COPY scheduler_alertas.py .
 COPY scheduler_alertas_v2.py .
+COPY monitor_nuevas_oportunidades.py .
 COPY database_manager.py .
 COPY database_mysql.py .
 COPY migrate_json_to_mysql.py .
