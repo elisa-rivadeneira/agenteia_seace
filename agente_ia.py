@@ -253,13 +253,13 @@ _Vuelve a escanear más tarde con /escanear_"""
                 "type": "function",
                 "function": {
                     "name": "buscar_segmentos_semanticamente",
-                    "description": "Búsqueda SEMÁNTICA de segmentos usando IA. USA ESTA HERRAMIENTA SIEMPRE para búsquedas de usuario. Tolera errores de escritura, entiende sinónimos y contexto. Ejemplo: 'capcitaciones', 'educar', 'formación' encontrarán 'Servicios de educación y capacitación'",
+                    "description": "🔥 HERRAMIENTA PRINCIPAL para buscar segmentos. Búsqueda SEMÁNTICA usando IA que entiende el contexto, tolera errores de escritura y detecta sinónimos. SIEMPRE usa esta primero. Ejemplos: 'capcitaciones' → 'Educación y capacitación', 'educar' → 'Educación y capacitación', 'limpieza' → 'Servicios de limpieza'",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "consulta_usuario": {
                                 "type": "string",
-                                "description": "Consulta del usuario tal cual (ej: 'capacitaciones', 'capcitaciones', 'software', 'educar')"
+                                "description": "Consulta del usuario tal cual (ej: 'capacitaciones', 'capcitaciones', 'software', 'educar', 'limpiar')"
                             },
                             "top_k": {
                                 "type": "integer",
@@ -268,23 +268,6 @@ _Vuelve a escanear más tarde con /escanear_"""
                             }
                         },
                         "required": ["consulta_usuario"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "buscar_segmentos_por_palabra",
-                    "description": "Búsqueda LITERAL por palabra (fallback). Solo úsala si buscar_segmentos_semanticamente falla",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "palabra_clave": {
-                                "type": "string",
-                                "description": "Palabra clave exacta"
-                            }
-                        },
-                        "required": ["palabra_clave"]
                     }
                 }
             },
