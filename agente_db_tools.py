@@ -29,11 +29,14 @@ def obtener_catalogo_segmentos():
             ruta = '/app/static/segmentos_seace.json'
 
         with open(ruta, 'r', encoding='utf-8') as f:
-            catalogo = json.load(f)
+            catalogo_array = json.load(f)
+
+        # Convertir array a dict para facilitar búsqueda
+        catalogo_dict = {seg['codigo']: seg['nombre'] for seg in catalogo_array}
 
         return {
-            "total_segmentos": len(catalogo),
-            "segmentos": catalogo
+            "total_segmentos": len(catalogo_dict),
+            "segmentos": catalogo_dict
         }
     except Exception as e:
         return {"error": f"No se pudo cargar el catálogo: {str(e)}"}
