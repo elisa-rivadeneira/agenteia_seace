@@ -20,6 +20,7 @@ class MonitorNuevasOportunidades:
     def obtener_usuarios_activos_con_alertas_realtime(self):
         """
         Obtiene todos los usuarios que tienen alertas en tiempo real activas
+        Y QUE YA HAYAN INICIALIZADO SU HISTORIAL (ejecutado /init)
         """
         try:
             conn = get_connection()
@@ -31,11 +32,15 @@ class MonitorNuevasOportunidades:
                     u.numero,
                     u.nombre,
                     c.score_minimo,
-                    c.max_oportunidades_alerta
+                    c.max_oportunidades_alerta,
+                    COUNT(DISTINCT h.id) as tiene_historial
                 FROM usuarios u
                 INNER JOIN usuario_configuracion c ON u.id = c.usuario_id
+                LEFT JOIN historial_oportunidades h ON u.id = h.usuario_id
                 WHERE u.activo = TRUE
                   AND c.alertas_realtime_activas = TRUE
+                GROUP BY u.id, u.numero, u.nombre, c.score_minimo, c.max_oportunidades_alerta
+                HAVING tiene_historial > 0
             """)
 
             usuarios = cursor.fetchall()
@@ -160,10 +165,11 @@ class MonitorNuevasOportunidades:
         usuarios = self.obtener_usuarios_activos_con_alertas_realtime()
 
         if not usuarios:
-            print("⚠️ No hay usuarios con alertas en tiempo real activas")
+            print("⚠️ No hay usuarios con alertas activas Y historial inicializado")
+            print("💡 Los usuarios deben ejecutar /init primero para recibir alertas")
             return
 
-        print(f"👥 Usuarios a monitorear: {len(usuarios)}")
+        print(f"👥 Usuarios a monitorear (con historial inicializado): {len(usuarios)}")
 
         for usuario in usuarios:
             usuario_id = usuario['id']
