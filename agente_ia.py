@@ -33,6 +33,9 @@ class AgenteIASEACE:
             self.config = None
             self.empresa = {}
 
+        # Memoria conversacional por usuario
+        self.historial_conversaciones = {}
+
     def analizar_oportunidades(self, oportunidades, pregunta_usuario=None):
         """
         Analiza oportunidades y genera respuesta inteligente
@@ -397,14 +400,28 @@ IMPORTANTE:
   * Segmento 52 = Equipamiento médico
   * etc.
 - Cuando encuentres múltiples segmentos, muestra los más relevantes (máximo 5-7)
-- Si el usuario quiere modificar algo, confirma antes de ejecutar
+- RECUERDA EL CONTEXTO DE LA CONVERSACIÓN: Si ya preguntaste algo y el usuario responde "sí", "ok", "dale", etc., PROCEDE CON LA ACCIÓN que habías propuesto
+- Si el usuario confirma una modificación (ej: dice "si" después de que preguntaste si agregar un segmento), ejecuta la modificación inmediatamente usando las herramientas
 - Usa emojis para mejor visualización en WhatsApp
 - NUNCA inventes códigos de segmentos, siempre consulta el catálogo real"""
 
+        # Obtener o crear historial para este usuario
+        if numero_usuario not in self.historial_conversaciones:
+            self.historial_conversaciones[numero_usuario] = []
+
+        historial = self.historial_conversaciones[numero_usuario]
+
+        # Mantener solo los últimos 10 mensajes (5 interacciones) para no saturar el contexto
+        if len(historial) > 10:
+            historial = historial[-10:]
+            self.historial_conversaciones[numero_usuario] = historial
+
+        # Construir mensajes con historial
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": pregunta}
+            {"role": "system", "content": system_prompt}
         ]
+        messages.extend(historial)
+        messages.append({"role": "user", "content": pregunta})
 
         try:
             # Primera llamada a la IA
@@ -459,10 +476,22 @@ IMPORTANTE:
                     messages=messages
                 )
 
-                return second_response.choices[0].message.content
+                respuesta_final = second_response.choices[0].message.content
+
+                # Guardar en historial
+                self.historial_conversaciones[numero_usuario].append({"role": "user", "content": pregunta})
+                self.historial_conversaciones[numero_usuario].append({"role": "assistant", "content": respuesta_final})
+
+                return respuesta_final
             else:
                 # La IA respondió directamente sin usar herramientas
-                return response_message.content
+                respuesta_final = response_message.content
+
+                # Guardar en historial
+                self.historial_conversaciones[numero_usuario].append({"role": "user", "content": pregunta})
+                self.historial_conversaciones[numero_usuario].append({"role": "assistant", "content": respuesta_final})
+
+                return respuesta_final
 
         except Exception as e:
             print(f"❌ Error en consulta de configuración: {e}")
