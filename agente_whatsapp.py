@@ -733,7 +733,23 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
         try:
             usuario = obtener_usuario_por_numero(numero_usuario)
             if not usuario:
-                return "❌ Usuario no encontrado"
+                from database_mysql import agregar_usuario
+                print(f"⚠️ Usuario {numero_usuario} no existe, creando automáticamente...")
+
+                exito = agregar_usuario(
+                    numero=numero_usuario,
+                    nombre="Usuario SEACE",
+                    email="",
+                    segmentos=[]
+                )
+
+                if not exito:
+                    return "❌ Error al crear usuario. Contacta al administrador."
+
+                usuario = obtener_usuario_por_numero(numero_usuario)
+
+                if not usuario:
+                    return "❌ Error al obtener usuario después de crear. Contacta al administrador."
 
             from database_mysql import obtener_segmentos_usuario
             segmentos = obtener_segmentos_usuario(usuario['id'])
