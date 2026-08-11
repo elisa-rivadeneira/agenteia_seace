@@ -1038,7 +1038,7 @@ De esta forma, a partir de ese momento solo recibirás alertas de licitaciones N
             if comando in self.comandos:
                 try:
                     # Comandos que necesitan numero_usuario
-                    if comando in ['/configurar', '/missegmentos', '/agregarsegmento']:
+                    if comando in ['/configurar', '/missegmentos', '/agregarsegmento', '/init']:
                         respuesta = self.comandos[comando](args, numero_usuario=numero_usuario)
                     else:
                         respuesta = self.comandos[comando](args)
