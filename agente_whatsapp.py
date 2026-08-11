@@ -246,6 +246,9 @@ _Usa /reporte para ver detalles completos_"""
         else:
             tiempo_str = "Nunca"
 
+        import sys
+        version_info = f"Python {sys.version.split()[0]}"
+
         return f"""🖥️ *ESTADO DEL SISTEMA*
 
 🔄 *MONITOR:*
@@ -262,6 +265,10 @@ _Usa /reporte para ver detalles completos_"""
 • Segmento: 43 (TI)
 • Intervalo: 30 minutos
 • Empresa: {self.notifier.empresa[:20]}...
+
+🔧 *SISTEMA:*
+• Versión: 2026-08-11 10:00
+• {version_info}
 
 ⏰ Estado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"""
 

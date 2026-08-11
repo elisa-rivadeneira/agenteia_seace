@@ -3,6 +3,9 @@ Herramientas de base de datos para el agente IA
 Permite al agente consultar y modificar la configuración del usuario
 """
 
+# Banner de versión para verificar que el código esté actualizado
+print("🔧 AGENTE_DB_TOOLS.PY - VERSION 2026-08-11 10:00 - Fix consultar_configuracion_alertas")
+
 from database_mysql import (
     obtener_usuario_por_numero,
     obtener_segmentos_usuario,
