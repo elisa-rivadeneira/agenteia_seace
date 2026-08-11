@@ -681,8 +681,16 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
             # La IA decidirá si es sobre configuración, segmentos, oportunidades, etc.
             print(f"🤖 IA procesando mensaje: '{mensaje[:80]}...'")
 
-            # Primero intentar con consulta de configuración (maneja segmentos, empresa, alertas)
-            # Si la pregunta NO es sobre oportunidades/licitaciones
+            # PRIORIDAD 1: Detectar si pide Excel/exportar (ANTES de procesar oportunidades)
+            palabras_excel = ['excel', 'exporta', 'exportar', 'archivo', 'xls', 'xlsx', 'envíame', 'enviame', 'mándame', 'mandame']
+            pide_excel = any(palabra in mensaje_lower for palabra in palabras_excel)
+
+            if pide_excel:
+                # Usar agente de configuración que tiene la herramienta de Excel
+                print(f"📊 Detectado: Usuario pide Excel - usando agente de configuración")
+                return self.agente_ia.consultar_configuracion(numero_usuario, mensaje)
+
+            # PRIORIDAD 2: Detectar si es sobre configuración/segmentos (NO oportunidades)
             palabras_oportunidades = ['oportunidad', 'licitacion', 'licitación', 'convocatoria',
                                      'concurso', 'tender', 'propuesta', 'bid']
 
