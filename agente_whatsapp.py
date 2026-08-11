@@ -788,6 +788,10 @@ Usa `/configurar` para seleccionar tus segmentos de interés primero."""
                     continue
 
                 oportunidades = resultado.get('oportunidades', [])
+
+                for op in oportunidades:
+                    op['segmento'] = segmento
+
                 todas_oportunidades.extend(oportunidades)
 
                 for op in oportunidades:

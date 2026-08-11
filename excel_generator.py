@@ -132,6 +132,96 @@ class ExcelGeneratorSEACE:
 
         return self.generar_excel_oportunidades(filtradas, filename)
 
+    def generar_excel_multisegmento(self, oportunidades, filename=None):
+        """
+        Genera Excel con hojas separadas por segmento
+
+        Args:
+            oportunidades: Lista de oportunidades (deben tener campo 'segmento')
+            filename: Nombre del archivo
+
+        Returns:
+            str: Path del archivo generado
+        """
+        if not oportunidades:
+            raise ValueError("No hay oportunidades para exportar")
+
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'oportunidades_multisegmento_{timestamp}.xlsx'
+
+        filepath = os.path.join(self.output_dir, filename)
+
+        from database_mysql import obtener_nombre_segmento
+
+        segmentos_unicos = sorted(set(op.get('segmento', 'Sin segmento') for op in oportunidades))
+
+        columnas_deseadas = [
+            'nomenclatura',
+            'entidad',
+            'descripcion_item',
+            'score_compatibilidad',
+            'fecha_inicio',
+            'fecha_fin',
+            'fecha_presentacion',
+            'moneda',
+            'url_seace'
+        ]
+
+        nombres_columnas = {
+            'nomenclatura': 'Código',
+            'entidad': 'Entidad',
+            'descripcion_item': 'Descripción',
+            'score_compatibilidad': 'Compatibilidad %',
+            'fecha_inicio': 'Inicio Consultas',
+            'fecha_fin': 'Fin Consultas',
+            'fecha_presentacion': 'Presentación Propuestas',
+            'moneda': 'Moneda',
+            'url_seace': 'URL SEACE'
+        }
+
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            for segmento in segmentos_unicos:
+                ops_segmento = [op for op in oportunidades if op.get('segmento') == segmento]
+
+                if not ops_segmento:
+                    continue
+
+                ops_ordenadas = sorted(
+                    ops_segmento,
+                    key=lambda x: x.get('score_compatibilidad', 0),
+                    reverse=True
+                )
+
+                df = pd.DataFrame(ops_ordenadas)
+
+                columnas_finales = [col for col in columnas_deseadas if col in df.columns]
+                df_final = df[columnas_finales]
+
+                df_final = df_final.rename(columns=nombres_columnas)
+
+                nombre_segmento = obtener_nombre_segmento(segmento)
+                nombre_hoja = f"Seg {segmento}"
+                if len(nombre_hoja) > 31:
+                    nombre_hoja = nombre_hoja[:31]
+
+                df_final.to_excel(writer, index=False, sheet_name=nombre_hoja)
+
+                worksheet = writer.sheets[nombre_hoja]
+
+                for idx, col in enumerate(df_final.columns, 1):
+                    max_length = max(
+                        df_final[col].astype(str).map(len).max(),
+                        len(col)
+                    )
+                    adjusted_width = min(max_length + 2, 50)
+                    column_letter = chr(64 + idx)
+                    worksheet.column_dimensions[column_letter].width = adjusted_width
+
+        print(f"✅ Excel multisegmento generado: {filepath}")
+        print(f"   📊 {len(segmentos_unicos)} hojas creadas: {', '.join(segmentos_unicos)}")
+        return filepath
+
 def test_generator():
     """Prueba del generador de Excel"""
     import json
@@ -174,8 +264,8 @@ def generar_excel_oportunidades(oportunidades, segmento=None, nombre_empresa="Us
     Función wrapper para generar Excel (compatible con imports directos)
 
     Args:
-        oportunidades: Lista de oportunidades
-        segmento: Código del segmento (opcional)
+        oportunidades: Lista de oportunidades (puede incluir campo 'segmento')
+        segmento: Código del segmento o lista de segmentos separados por coma (opcional)
         nombre_empresa: Nombre de la empresa (opcional)
 
     Returns:
@@ -184,9 +274,13 @@ def generar_excel_oportunidades(oportunidades, segmento=None, nombre_empresa="Us
     generator = ExcelGeneratorSEACE()
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'oportunidades_seg{segmento}_{timestamp}.xlsx' if segmento else f'oportunidades_{timestamp}.xlsx'
 
-    return generator.generar_excel_oportunidades(oportunidades, filename)
+    if segmento and ',' in segmento:
+        filename = f'oportunidades_multisegmento_{timestamp}.xlsx'
+        return generator.generar_excel_multisegmento(oportunidades, filename)
+    else:
+        filename = f'oportunidades_seg{segmento}_{timestamp}.xlsx' if segmento else f'oportunidades_{timestamp}.xlsx'
+        return generator.generar_excel_oportunidades(oportunidades, filename)
 
 def enviar_excel_whatsapp(numero_destino, archivo_path):
     """
