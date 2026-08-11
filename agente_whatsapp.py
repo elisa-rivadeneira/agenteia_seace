@@ -52,7 +52,8 @@ class AgenteWhatsAppSEACE:
             '/excel': self.comando_excel,
             '/configurar': self.comando_configurar,
             '/missegmentos': self.comando_mis_segmentos,
-            '/agregarsegmento': self.comando_agregar_segmento
+            '/agregarsegmento': self.comando_agregar_segmento,
+            '/init': self.comando_init
         }
 
         self.estado_monitor = {
@@ -358,6 +359,10 @@ _Usa /reporte para ver detalles completos_"""
         """Muestra ayuda completa"""
         return """📚 *GUÍA COMPLETA DEL AGENTE*
 
+🚀 *INICIO (USUARIOS NUEVOS):*
+• `/init` - Inicializar sistema y recibir Excel base
+  _(Obligatorio la primera vez para establecer punto de partida)_
+
 🎯 *COMANDOS PRINCIPALES:*
 • `/escanear` - Buscar oportunidades ahora
 • `/reporte` - Reporte completo actual
@@ -382,11 +387,11 @@ _Usa /reporte para ver detalles completos_"""
 • `/inicio` - Reiniciar agente
 • `/ayuda` - Esta ayuda
 
-💡 *TIPS:*
-• Escribe cualquier texto para consulta libre
-• Los reportes se actualizan automáticamente
-• Puedes usar comandos en cualquier momento
-• El sistema funciona 24/7
+💡 *CÓMO FUNCIONA EL SISTEMA:*
+1. Ejecuta `/init` para establecer punto de partida
+2. Recibes Excel con oportunidades actuales
+3. A partir de ese momento, solo recibes alertas de licitaciones NUEVAS
+4. El sistema monitorea SEACE automáticamente
 
 🤖 *EJEMPLOS:*
 • "/urgentes" → Oportunidades que vencen pronto
@@ -672,9 +677,196 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
         else:
             return f"⚠️ El segmento *{codigo}* ya estaba en tu lista"
 
+    def verificar_historial_vacio(self, numero_usuario):
+        """
+        Verifica si el usuario tiene historial de oportunidades visto
+        Retorna True si el historial está vacío (usuario nuevo)
+        """
+        from database_mysql import get_connection, obtener_usuario_por_numero
+
+        try:
+            usuario = obtener_usuario_por_numero(numero_usuario)
+            if not usuario:
+                return True
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT COUNT(*) as total
+                FROM historial_oportunidades
+                WHERE usuario_id = %s
+            """, (usuario['id'],))
+
+            resultado = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            total = resultado[0] if resultado else 0
+
+            return total == 0
+
+        except Exception as e:
+            print(f"⚠️ Error verificando historial: {e}")
+            return True
+
+    def comando_init(self, args="", numero_usuario=None):
+        """
+        Comando /init - Inicializa historial y envía Excel con oportunidades base
+        Este es el punto de partida para que el usuario sepa cuáles son las oportunidades actuales
+        """
+        from database_mysql import get_connection, obtener_usuario_por_numero
+        from seace_extractor_realtime import extraer_oportunidades_realtime
+        from excel_generator import generar_excel_oportunidades, enviar_excel_whatsapp
+
+        if not numero_usuario:
+            return "❌ Error: No se pudo identificar el usuario"
+
+        mensaje_inicial = """🔧 *INICIALIZANDO SISTEMA DE ALERTAS*
+
+📊 Escaneando SEACE en tus segmentos configurados...
+📋 Esto será tu punto de partida
+⏳ Puede tomar 1-2 minutos..."""
+
+        self.notifier.send_message(mensaje_inicial, numero_usuario)
+
+        try:
+            usuario = obtener_usuario_por_numero(numero_usuario)
+            if not usuario:
+                return "❌ Usuario no encontrado"
+
+            from database_mysql import obtener_segmentos_usuario
+            segmentos = obtener_segmentos_usuario(usuario['id'])
+
+            if not segmentos:
+                return """⚠️ No tienes segmentos configurados
+
+Usa `/configurar` para seleccionar tus segmentos de interés primero."""
+
+            print(f"🔧 [/init] Inicializando historial para usuario {usuario['id']} - {len(segmentos)} segmentos")
+
+            todas_oportunidades = []
+            total_insertadas = 0
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            for segmento in segmentos:
+                print(f"📊 Procesando segmento {segmento}...")
+
+                resultado = extraer_oportunidades_realtime(segmento)
+
+                if not resultado or resultado.get('total_oportunidades', 0) == 0:
+                    continue
+
+                oportunidades = resultado.get('oportunidades', [])
+                todas_oportunidades.extend(oportunidades)
+
+                for op in oportunidades:
+                    nomenclatura = op.get('nomenclatura', '')
+                    if not nomenclatura:
+                        continue
+
+                    try:
+                        cursor.execute("""
+                            INSERT INTO historial_oportunidades (usuario_id, segmento, nomenclatura)
+                            VALUES (%s, %s, %s)
+                        """, (usuario['id'], segmento, nomenclatura))
+                        total_insertadas += 1
+                    except:
+                        pass
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            print(f"✅ Historial inicializado: {total_insertadas} oportunidades guardadas")
+
+            if not todas_oportunidades:
+                return """⚠️ No se encontraron oportunidades en tus segmentos
+
+El historial está vacío. Cuando aparezcan nuevas licitaciones, te avisaré."""
+
+            mensaje_progreso = f"""✅ Historial inicializado
+
+📊 Se encontraron *{len(todas_oportunidades)} oportunidades* en tus {len(segmentos)} segmentos
+
+📤 Generando Excel con todas las oportunidades..."""
+
+            self.notifier.send_message(mensaje_progreso, numero_usuario)
+
+            todas_oportunidades_ordenadas = sorted(
+                todas_oportunidades,
+                key=lambda x: x.get('score_compatibilidad', 0),
+                reverse=True
+            )
+
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'oportunidades_base_init_{timestamp}.xlsx'
+
+            archivo_path = generar_excel_oportunidades(
+                todas_oportunidades_ordenadas,
+                segmento=','.join(segmentos),
+                nombre_empresa=usuario.get('nombre', 'Usuario')
+            )
+
+            import os
+            if os.path.exists(archivo_path):
+                exito_envio = enviar_excel_whatsapp(numero_usuario, archivo_path)
+
+                if exito_envio:
+                    return f"""✅ *SISTEMA INICIALIZADO CORRECTAMENTE*
+
+📊 Resumen:
+• Segmentos: {len(segmentos)}
+• Oportunidades encontradas: {len(todas_oportunidades)}
+• Guardadas en historial: {total_insertadas}
+
+📁 Te envié un Excel con TODAS las oportunidades actuales
+
+📌 *IMPORTANTE:*
+Este Excel es tu PUNTO DE PARTIDA. A partir de ahora, solo recibirás alertas de licitaciones NUEVAS que aparezcan en SEACE.
+
+🔔 El sistema está listo. Recibirás notificaciones automáticas cuando haya nuevas oportunidades."""
+                else:
+                    return f"""✅ Historial inicializado ({total_insertadas} oportunidades)
+
+⚠️ Error al enviar Excel, pero el sistema está activo."""
+            else:
+                return f"""✅ Historial inicializado ({total_insertadas} oportunidades)
+
+El sistema está activo y recibirás alertas de nuevas oportunidades."""
+
+        except Exception as e:
+            print(f"❌ Error en /init: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"❌ Error al inicializar: {str(e)[:200]}"
+
     def procesar_mensaje_libre(self, mensaje: str, numero_usuario=None) -> str:
         """Procesa mensajes libres usando IA para entender la intención"""
         mensaje_lower = mensaje.lower()
+
+        if numero_usuario:
+            historial_vacio = self.verificar_historial_vacio(numero_usuario)
+
+            if historial_vacio:
+                if any(palabra in mensaje_lower for palabra in ['si', 'sí', 'claro', 'ok', 'dale', 'adelante', 'iniciame', 'quiero']):
+                    return self.comando_init(numero_usuario=numero_usuario)
+
+                return """👋 ¡Bienvenido al sistema de alertas SEACE!
+
+📊 Veo que es tu primera vez o aún no has inicializado el sistema.
+
+Para comenzar a recibir alertas de *nuevas licitaciones*, necesito:
+
+1️⃣ Escanear SEACE en tus segmentos configurados
+2️⃣ Marcar las oportunidades actuales como "punto de partida"
+3️⃣ Enviarte un Excel con todas las oportunidades base
+
+De esta forma, a partir de ese momento solo recibirás alertas de licitaciones NUEVAS que aparezcan.
+
+¿Deseas que inicialice el sistema ahora? (Responde "sí" para continuar)"""
 
         # Si hay agente IA activo, usarlo para TODAS las consultas
         if self.agente_ia and self.agente_ia.activo and numero_usuario:

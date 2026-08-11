@@ -380,18 +380,37 @@ def agregar_segmentos(numero_telefono, segmentos_a_agregar):
         # Obtener segmentos actuales
         segmentos_actuales = obtener_segmentos_usuario(usuario['id'])
 
+        # Detectar cuáles son REALMENTE nuevos
+        segmentos_realmente_nuevos = [s for s in segmentos_a_agregar if s not in segmentos_actuales]
+
         # Agregar nuevos segmentos sin duplicar
         segmentos_finales = list(set(segmentos_actuales + segmentos_a_agregar))
 
         # Actualizar en BD
         exito = configurar_segmentos_usuario_por_id(usuario['id'], segmentos_finales)
 
+        if exito and segmentos_realmente_nuevos:
+            from inicializar_historial_usuario import inicializar_historial_usuario
+            print(f"🔧 Inicializando historial para segmentos nuevos: {segmentos_realmente_nuevos}")
+
+            resultado_init = inicializar_historial_usuario(numero_telefono, verbose=False)
+
+            mensaje_base = f"Segmentos agregados correctamente. Ahora tienes {len(segmentos_finales)} segmentos activos."
+
+            if resultado_init.get('exito'):
+                ops_inicializadas = resultado_init.get('oportunidades_insertadas', 0)
+                mensaje_base += f"\n\n✅ Historial inicializado con {ops_inicializadas} oportunidades actuales.\nA partir de ahora solo recibirás alertas de oportunidades NUEVAS."
+
+            mensaje = mensaje_base
+        else:
+            mensaje = f"Segmentos agregados correctamente. Ahora tienes {len(segmentos_finales)} segmentos activos." if exito else "Error al agregar segmentos"
+
         return {
             "exito": exito,
             "segmentos_anteriores": segmentos_actuales,
             "segmentos_agregados": segmentos_a_agregar,
             "segmentos_finales": segmentos_finales,
-            "mensaje": f"Segmentos agregados correctamente. Ahora tienes {len(segmentos_finales)} segmentos activos." if exito else "Error al agregar segmentos"
+            "mensaje": mensaje
         }
     except Exception as e:
         return {"error": str(e), "exito": False}
