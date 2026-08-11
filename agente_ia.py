@@ -644,8 +644,19 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
         try:
             from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento
 
+            # Normalizar número
+            numero_normalizado = numero_usuario
+            if numero_normalizado.startswith('+'):
+                numero_normalizado = numero_normalizado[1:]
+            if '@' in numero_normalizado:
+                numero_normalizado = numero_normalizado.split('@')[0]
+
+            print(f"🔍 [detectar_segmento] Número original: {numero_usuario}")
+            print(f"🔍 [detectar_segmento] Número normalizado: {numero_normalizado}")
+
             # Obtener segmentos del usuario
-            segmentos_usuario = obtener_segmentos_usuario(numero_usuario)
+            segmentos_usuario = obtener_segmentos_usuario(numero_normalizado)
+            print(f"🔍 [detectar_segmento] Segmentos obtenidos: {segmentos_usuario}")
 
             if not segmentos_usuario:
                 return {
