@@ -169,5 +169,91 @@ def test_generator():
     except ValueError as e:
         print(f"⚠️ {e}")
 
+def generar_excel_oportunidades(oportunidades, segmento=None, nombre_empresa="Usuario"):
+    """
+    Función wrapper para generar Excel (compatible con imports directos)
+
+    Args:
+        oportunidades: Lista de oportunidades
+        segmento: Código del segmento (opcional)
+        nombre_empresa: Nombre de la empresa (opcional)
+
+    Returns:
+        str: Path del archivo generado
+    """
+    generator = ExcelGeneratorSEACE()
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'oportunidades_seg{segmento}_{timestamp}.xlsx' if segmento else f'oportunidades_{timestamp}.xlsx'
+
+    return generator.generar_excel_oportunidades(oportunidades, filename)
+
+def enviar_excel_whatsapp(numero_destino, archivo_path):
+    """
+    Envía archivo Excel por WhatsApp usando Evolution API
+
+    Args:
+        numero_destino: Número de WhatsApp destino (formato: 51967717179)
+        archivo_path: Path del archivo Excel a enviar
+
+    Returns:
+        bool: True si se envió correctamente
+    """
+    import requests
+    import os
+
+    # Normalizar número
+    if numero_destino.startswith('+'):
+        numero_destino = numero_destino[1:]
+    if '@' in numero_destino:
+        numero_destino = numero_destino.split('@')[0]
+
+    numero_whatsapp = f"{numero_destino}@s.whatsapp.net"
+
+    EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', 'https://automation-evolution-api.gnrjtm.easypanel.host')
+    EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '5DD598ABD764-474E-BCA4-53B1AC9FD4BD')
+    EVOLUTION_INSTANCE_NAME = os.getenv('EVOLUTION_INSTANCE_NAME', 'service_reloaded_otronumber')
+
+    url = f"{EVOLUTION_API_URL}/message/sendMedia/{EVOLUTION_INSTANCE_NAME}"
+
+    headers = {
+        'apikey': EVOLUTION_API_KEY
+    }
+
+    # Verificar que el archivo existe
+    if not os.path.exists(archivo_path):
+        print(f"❌ Archivo no encontrado: {archivo_path}")
+        return False
+
+    # Leer el archivo
+    try:
+        with open(archivo_path, 'rb') as f:
+            files = {
+                'mediafile': (os.path.basename(archivo_path), f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+
+            data = {
+                'number': numero_whatsapp,
+                'mediatype': 'document',
+                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'caption': '📊 Reporte de Oportunidades SEACE'
+            }
+
+            print(f"📤 Enviando Excel a {numero_whatsapp}...")
+            response = requests.post(url, headers=headers, data=data, files=files)
+
+            if response.status_code == 200 or response.status_code == 201:
+                print(f"✅ Excel enviado correctamente")
+                return True
+            else:
+                print(f"❌ Error al enviar Excel: {response.status_code} - {response.text}")
+                return False
+
+    except Exception as e:
+        print(f"❌ Error al enviar Excel: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 if __name__ == "__main__":
     test_generator()
