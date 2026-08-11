@@ -750,12 +750,16 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
                 'recomiend', 'mejor', 'conveniente', 'debería', 'deberia', 'últimas',
                 'ultimas', 'nuevas', 'hoy', 'mes', 'semana'
             ]):
-                # Detectar si el usuario menciona un segmento específico
-                import re
-                segmento_match = re.search(r'segmento\s+(\d+)', mensaje_lower)
-                segmento = segmento_match.group(1) if segmento_match else "43"
+                # Usar IA para detectar inteligentemente el segmento solicitado
+                print(f"🤖 Usando IA para detectar segmento en: '{mensaje[:80]}...'")
+                deteccion = self.agente_ia.detectar_segmento_solicitado(mensaje, numero_usuario)
 
-                print(f"🔍 Pregunta sobre oportunidades detectada. Escaneando segmento {segmento}...")
+                if not deteccion.get("encontrado"):
+                    # Error: segmento no configurado o no disponible
+                    return deteccion.get("mensaje_error", "❌ Error detectando segmento")
+
+                segmento = deteccion.get("segmento")
+                print(f"✅ IA detectó segmento: {segmento} - {deteccion.get('razon', '')}")
 
                 # ESCANEAR primero para tener datos frescos
                 try:

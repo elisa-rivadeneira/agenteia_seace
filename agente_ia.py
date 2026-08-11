@@ -598,6 +598,120 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
             print(f"❌ Error en consulta de configuración: {e}")
             return f"⚠️ Error al procesar tu consulta: {str(e)}"
 
+    def detectar_segmento_solicitado(self, mensaje_usuario, numero_usuario):
+        """
+        Usa IA para detectar inteligentemente qué segmento quiere consultar el usuario
+
+        Args:
+            mensaje_usuario: El mensaje del usuario (ej: "cuales son las oportunidades del 81?")
+            numero_usuario: Número de teléfono del usuario
+
+        Returns:
+            dict: {"segmento": "81", "encontrado": True} o {"segmento": None, "encontrado": False, "mensaje_error": "..."}
+        """
+        if not self.activo:
+            return {"segmento": None, "encontrado": False, "mensaje_error": "IA no disponible"}
+
+        try:
+            from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento
+
+            # Obtener segmentos del usuario
+            segmentos_usuario = obtener_segmentos_usuario(numero_usuario)
+
+            if not segmentos_usuario:
+                return {
+                    "segmento": None,
+                    "encontrado": False,
+                    "mensaje_error": "⚠️ No tienes segmentos configurados. Usa `/configurar` primero."
+                }
+
+            # Crear contexto de segmentos del usuario
+            segmentos_info = "\n".join([
+                f"- Código {codigo}: {obtener_nombre_segmento(codigo)}"
+                for codigo in segmentos_usuario
+            ])
+
+            # Prompt para la IA
+            system_prompt = """Eres un asistente que detecta qué segmento SEACE quiere consultar el usuario.
+
+TAREA:
+1. Analiza el mensaje del usuario
+2. Identifica si menciona un número de segmento específico
+3. Verifica que ese segmento esté en la lista de segmentos del usuario
+4. Responde SOLO en formato JSON
+
+IMPORTANTE:
+- Si el usuario dice "del 81", "en el 86", "segmento 43", "código 80" → extrae ese número
+- Solo acepta segmentos que estén en la lista del usuario
+- Si no menciona segmento, usa el PRIMERO de la lista
+- Si menciona un segmento que NO tiene, indica que no está configurado"""
+
+            user_prompt = f"""Mensaje del usuario: "{mensaje_usuario}"
+
+Segmentos configurados del usuario:
+{segmentos_info}
+
+Responde en JSON con este formato:
+{{
+  "segmento_detectado": "81",
+  "esta_configurado": true,
+  "usar_segmento": "81",
+  "razon": "El usuario pidió explícitamente el segmento 81"
+}}
+
+O si no mencionó segmento:
+{{
+  "segmento_detectado": null,
+  "esta_configurado": true,
+  "usar_segmento": "{segmentos_usuario[0]}",
+  "razon": "No especificó segmento, usando el primero configurado"
+}}
+
+O si mencionó un segmento no configurado:
+{{
+  "segmento_detectado": "99",
+  "esta_configurado": false,
+  "usar_segmento": null,
+  "razon": "El segmento 99 no está en la configuración del usuario"
+}}"""
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+
+            resultado = json.loads(response.choices[0].message.content)
+            print(f"🤖 IA detectó segmento: {resultado}")
+
+            if not resultado.get("esta_configurado", True):
+                return {
+                    "segmento": None,
+                    "encontrado": False,
+                    "mensaje_error": f"⚠️ El segmento *{resultado.get('segmento_detectado')}* no está en tu configuración.\n\nTus segmentos activos: {', '.join(segmentos_usuario)}\n\nUsa `/agregarsegmento {resultado.get('segmento_detectado')}` para agregarlo."
+                }
+
+            return {
+                "segmento": resultado.get("usar_segmento"),
+                "encontrado": True,
+                "razon": resultado.get("razon", "")
+            }
+
+        except Exception as e:
+            print(f"❌ Error detectando segmento: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback: usar primer segmento del usuario
+            from database_manager import obtener_segmentos_usuario
+            segmentos = obtener_segmentos_usuario(numero_usuario)
+            if segmentos:
+                return {"segmento": segmentos[0], "encontrado": True, "razon": "Fallback al primer segmento"}
+            return {"segmento": "43", "encontrado": True, "razon": "Fallback default"}
+
 # Prueba
 if __name__ == "__main__":
     agente = AgenteIASEACE()

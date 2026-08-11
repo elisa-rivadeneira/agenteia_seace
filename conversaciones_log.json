@@ -2,10 +2,10 @@
   "conversaciones": {
     "51967717179@s.whatsapp.net": {
       "numero": "51967717179@s.whatsapp.net",
-      "nombre": "Elisa Rivadaneira",
+      "nombre": "Elisa Test",
       "primera_interaccion": "2026-07-24T14:12:03.534332",
-      "ultima_interaccion": "2026-07-24T14:12:03.534585",
-      "total_mensajes": 2,
+      "ultima_interaccion": "2026-08-10T18:40:34.087716",
+      "total_mensajes": 4,
       "historial": [
         {
           "timestamp": "2026-07-24T14:12:03.534351",
@@ -18,6 +18,18 @@
           "tipo": "texto",
           "mensaje_usuario": "que oportunidades hay?",
           "respuesta_bot": "Aquí están las mejores oportunidades..."
+        },
+        {
+          "timestamp": "2026-08-10T16:54:54.096442",
+          "tipo": "texto",
+          "mensaje_usuario": "/ayuda",
+          "respuesta_bot": "📚 *GUÍA COMPLETA DEL AGENTE*\n\n🎯 *COMANDOS PRINCIPALES:*\n• `/escanear` - Buscar oportunidades ahora\n• `/reporte` - Reporte completo actual\n• `/urgentes` - Solo oportunidades urgentes\n• `/excel` - Exportar a Excel\n• `/estado` - Estado del sistema\n\n⚙️ *CONFIGURACIÓN PERSONAL:*\n• `/configurar` - Seleccionar segmentos SEACE\n• `/missegmentos` - Ver tus segmentos activos\n• `/agregarsegmento <código>` - Agregar un segmento\n\n📊 *ANÁLISIS Y EXPORTACIÓN:*\n• `/estadisticas` - Métricas detalladas\n• `/filtrar [score]` - Filtrar por score mínimo\n• `/excel` - TODAS las oportunidades en Excel\n• `/excel 10` - Solo top 10 en Excel\n• `/excel 20` - Solo top 20 en Excel\n\n⚙️ *SISTEMA:*\n• `/config` - Ver configuración\n• `/inicio` - Reiniciar agente\n• `/ayuda` - Esta ayuda\n\n💡 *TIPS:*\n• Escribe cualquier texto para consulta libre\n• Los reportes se actualizan automáticamente\n• Puedes usar comandos en cualquier momento\n• El sistema funciona 24/7\n\n🤖 *EJEMPLOS:*\n• \"/urgentes\" → Oportunidades que vencen pronto\n• \"/filtrar 50\" → Solo oportunidades >50% score\n• \"/excel\" → Envía Excel con top 10\n• \"¿Cuántas oportunidades hay?\" → Consulta libre\n• \"Envíame un Excel\" → El agente te enviará el archivo\n\n_¿Tienes alguna pregunta específica?_"
+        },
+        {
+          "timestamp": "2026-08-10T18:40:34.087707",
+          "tipo": "texto",
+          "mensaje_usuario": "Hola agente, que segmentos hay en seace?",
+          "respuesta_bot": "🤔 No entendí tu consulta: \"Hola agente, que segmentos hay en seace?...\"\n\n💡 *PUEDES USAR COMANDOS:*\n• /escanear - Buscar oportunidades\n• /configurar - Ver/modificar tu configuración\n• /missegmentos - Ver tus segmentos activos\n• /ayuda - Lista completa de comandos"
         }
       ]
     },
