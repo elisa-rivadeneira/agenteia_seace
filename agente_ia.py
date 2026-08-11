@@ -13,6 +13,8 @@ from agente_db_tools import HERRAMIENTAS_DB
 class AgenteIASEACE:
     def __init__(self):
         """Inicializa el agente IA con OpenAI"""
+        print("🚨🚨🚨 AGENTE_IA.PY - VERSION 2026-08-11 08:30 - CODIGO NUEVO CON MYSQL 🚨🚨🚨")
+
         api_key = os.getenv('OPENAI_API_KEY')
 
         if not api_key:

@@ -45,8 +45,13 @@ RUN mkdir -p /data
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV FLASK_ENV=production
 ENV TZ=America/Lima
+
+# Remove any cached Python bytecode files
+RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+RUN find /app -type f -name "*.pyc" -delete 2>/dev/null || true
 
 # Expose port
 EXPOSE 5000
