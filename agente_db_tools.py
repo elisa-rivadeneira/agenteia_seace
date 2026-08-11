@@ -4,7 +4,7 @@ Permite al agente consultar y modificar la configuración del usuario
 """
 
 # Banner de versión para verificar que el código esté actualizado
-print("🔧 AGENTE_DB_TOOLS.PY - VERSION 2026-08-11 10:00 - Fix consultar_configuracion_alertas")
+print("🔧 AGENTE_DB_TOOLS.PY - VERSION 2026-08-11 10:15 - Agregar exportar_excel_y_enviar()")
 
 from database_mysql import (
     obtener_usuario_por_numero,
@@ -568,6 +568,103 @@ def extraer_oportunidades_seace(segmento, numero_telefono=None):
             "error": f"Error al extraer oportunidades: {str(e)}"
         }
 
+def exportar_excel_y_enviar(numero_telefono, segmento=None, top_n=None, score_minimo=None):
+    """
+    Genera archivo Excel con oportunidades y lo envía por WhatsApp
+
+    Args:
+        numero_telefono: Número de WhatsApp del usuario
+        segmento: Código del segmento (opcional, usa primero del usuario si no se especifica)
+        top_n: Número de oportunidades a incluir (opcional)
+        score_minimo: Score mínimo de compatibilidad (opcional)
+
+    Returns:
+        dict con resultado de la operación
+    """
+    try:
+        print(f"📊 [exportar_excel_y_enviar] Iniciando para {numero_telefono}, segmento={segmento}")
+
+        # Normalizar número
+        if numero_telefono.startswith('+'):
+            numero_telefono = numero_telefono[1:]
+        if '@' in numero_telefono:
+            numero_telefono = numero_telefono.split('@')[0]
+
+        # Si no especificó segmento, obtener el primero del usuario
+        if not segmento:
+            usuario = obtener_usuario_por_numero(numero_telefono)
+            if not usuario:
+                return {"exito": False, "error": "Usuario no encontrado"}
+
+            segmentos = obtener_segmentos_usuario(usuario['id'])
+            if not segmentos:
+                return {"exito": False, "error": "No tienes segmentos configurados"}
+
+            segmento = segmentos[0]
+            print(f"📊 [exportar_excel_y_enviar] Usando primer segmento del usuario: {segmento}")
+
+        # Extraer oportunidades
+        from seace_extractor_realtime import extraer_oportunidades_realtime
+        resultado = extraer_oportunidades_realtime(segmento)
+        oportunidades = resultado.get('oportunidades', [])
+
+        if not oportunidades:
+            return {
+                "exito": False,
+                "error": f"No hay oportunidades disponibles en el segmento {segmento}"
+            }
+
+        # Filtrar si se especificó
+        if score_minimo:
+            oportunidades = [op for op in oportunidades if op.get('score_compatibilidad', 0) >= score_minimo]
+
+        if top_n:
+            oportunidades = oportunidades[:top_n]
+
+        # Generar Excel
+        from excel_generator import generar_excel_oportunidades, enviar_excel_whatsapp
+
+        nombre_empresa = "Usuario"
+        usuario = obtener_usuario_por_numero(numero_telefono)
+        if usuario:
+            empresa = obtener_empresa_usuario_por_id(usuario['id'])
+            if empresa and empresa.get('nombre'):
+                nombre_empresa = empresa['nombre']
+
+        archivo_path = generar_excel_oportunidades(
+            oportunidades,
+            segmento,
+            nombre_empresa=nombre_empresa
+        )
+
+        if not archivo_path:
+            return {"exito": False, "error": "Error al generar archivo Excel"}
+
+        # Enviar por WhatsApp
+        exito_envio = enviar_excel_whatsapp(numero_telefono, archivo_path)
+
+        if exito_envio:
+            return {
+                "exito": True,
+                "mensaje": f"✅ Excel generado y enviado con {len(oportunidades)} oportunidades del segmento {segmento}",
+                "total_oportunidades": len(oportunidades),
+                "archivo": archivo_path
+            }
+        else:
+            return {
+                "exito": False,
+                "error": "Excel generado pero fallo al enviar por WhatsApp",
+                "archivo": archivo_path
+            }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "exito": False,
+            "error": f"Error al exportar Excel: {str(e)}"
+        }
+
 # Diccionario de funciones disponibles para el agente
 HERRAMIENTAS_DB = {
     "obtener_catalogo_segmentos": obtener_catalogo_segmentos,
@@ -582,5 +679,6 @@ HERRAMIENTAS_DB = {
     "modificar_segmentos": modificar_segmentos,
     "modificar_empresa": modificar_empresa,
     "modificar_configuracion_alertas": modificar_configuracion_alertas,
-    "extraer_oportunidades_seace": extraer_oportunidades_seace
+    "extraer_oportunidades_seace": extraer_oportunidades_seace,
+    "exportar_excel_y_enviar": exportar_excel_y_enviar
 }

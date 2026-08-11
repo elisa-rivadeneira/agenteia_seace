@@ -442,6 +442,35 @@ _Vuelve a escanear más tarde con /escanear_"""
                         "required": ["numero_telefono"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "exportar_excel_y_enviar",
+                    "description": "⭐ USA ESTA cuando el usuario pida Excel, archivo, exportar, o 'envíame'. Genera archivo Excel con oportunidades y lo envía automáticamente por WhatsApp. Esta herramienta hace TODO el proceso: extrae datos, genera Excel y envía el archivo.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario (se inyecta automáticamente)"
+                            },
+                            "segmento": {
+                                "type": "string",
+                                "description": "Código del segmento SEACE (ej: '43', '86'). Si no se especifica, usa el primero del usuario."
+                            },
+                            "top_n": {
+                                "type": "integer",
+                                "description": "Número máximo de oportunidades a incluir (opcional)"
+                            },
+                            "score_minimo": {
+                                "type": "integer",
+                                "description": "Score mínimo de compatibilidad para filtrar (opcional, ej: 30)"
+                            }
+                        },
+                        "required": ["numero_telefono"]
+                    }
+                }
             }
         ]
 
@@ -513,7 +542,13 @@ Tu trabajo es ayudar al usuario a:
    - Usuario pregunta "me llegarán alertas?" o "recibiré notificaciones?" → DEBES llamar consultar_configuracion_alertas()
    - Explica claramente los horarios y configuración de alertas basándote en la respuesta
 
-11. Sé conversacional pero NUNCA inventes datos
+11. **EXPORTAR A EXCEL AUTOMÁTICAMENTE**:
+   - Usuario dice "envíame un excel", "exporta", "quiero un archivo", "mándame las oportunidades del segmento X" → DEBES llamar exportar_excel_y_enviar()
+   - Esta herramienta hace TODO: extrae datos + genera Excel + envía archivo por WhatsApp
+   - NUNCA respondas con texto sobre oportunidades si pidió Excel, SOLO ejecuta exportar_excel_y_enviar()
+   - Después de ejecutar la herramienta, responde: "✅ Te acabo de enviar el Excel con las oportunidades del segmento X"
+
+12. Sé conversacional pero NUNCA inventes datos
 
 EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOGO):
 - Segmento 43 = Tecnologías de la Información
@@ -594,7 +629,8 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
                         "modificar_segmentos",
                         "modificar_empresa",
                         "modificar_configuracion_alertas",
-                        "extraer_oportunidades_seace"
+                        "extraer_oportunidades_seace",
+                        "exportar_excel_y_enviar"
                     ]
 
                     if function_name in funciones_que_necesitan_numero:
