@@ -290,8 +290,18 @@ def consultar_segmentos_usuario(numero_telefono):
         return {"error": "Usuario no encontrado"}
 
     segmentos = obtener_segmentos_usuario(usuario['id'])
+
+    # Agregar nombres de segmentos
+    segmentos_con_nombres = []
+    for codigo in segmentos:
+        segmentos_con_nombres.append({
+            "codigo": codigo,
+            "nombre": obtener_nombre_segmento(codigo)
+        })
+
     return {
-        "segmentos": segmentos,
+        "segmentos": segmentos,  # Solo códigos para retrocompatibilidad
+        "segmentos_detalle": segmentos_con_nombres,  # Códigos con nombres
         "total": len(segmentos)
     }
 
