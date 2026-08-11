@@ -346,8 +346,8 @@ def consultar_configuracion_alertas(numero_telefono):
     if not usuario:
         return {"error": "Usuario no encontrado"}
 
-    config = obtener_configuracion_usuario(usuario['id'])
-    return config
+    config = obtener_configuracion_usuario_por_id(usuario['id'])
+    return config if config else {"error": "Configuración no encontrada"}
 
 def agregar_segmentos(numero_telefono, segmentos_a_agregar):
     """
