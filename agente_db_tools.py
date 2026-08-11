@@ -6,9 +6,9 @@ Permite al agente consultar y modificar la configuración del usuario
 from database_mysql import (
     obtener_usuario_por_numero,
     obtener_segmentos_usuario,
-    obtener_configuracion_usuario,
-    obtener_empresa_usuario,
-    configurar_segmentos_usuario,
+    obtener_configuracion_usuario_por_id,
+    obtener_empresa_usuario_por_id,
+    configurar_segmentos_usuario_por_id,
     actualizar_empresa_usuario,
     actualizar_configuracion_usuario
 )
@@ -93,9 +93,9 @@ def obtener_perfil_completo(numero_telefono):
             "numero": numero_telefono
         }
 
-    empresa = obtener_empresa_usuario(usuario['id'])
+    empresa = obtener_empresa_usuario_por_id(usuario['id'])
     segmentos = obtener_segmentos_usuario(usuario['id'])
-    configuracion = obtener_configuracion_usuario(usuario['id'])
+    configuracion = obtener_configuracion_usuario_por_id(usuario['id'])
 
     return {
         "registrado": True,
@@ -204,7 +204,7 @@ def modificar_segmentos(numero_telefono, segmentos_nuevos):
         if isinstance(segmentos_nuevos, str):
             segmentos_nuevos = [s.strip() for s in segmentos_nuevos.split(',')]
 
-        exito = configurar_segmentos_usuario(usuario['id'], segmentos_nuevos)
+        exito = configurar_segmentos_usuario_por_id(usuario['id'], segmentos_nuevos)
         return {
             "exito": exito,
             "segmentos_actualizados": segmentos_nuevos,

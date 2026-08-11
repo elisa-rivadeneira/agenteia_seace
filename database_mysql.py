@@ -396,6 +396,182 @@ def guardar_empresa_usuario(numero: str, empresa: Dict) -> bool:
         print(f"❌ Error al guardar empresa: {e}")
         return False
 
+def obtener_usuario_por_numero(numero: str) -> Optional[Dict]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuarios WHERE numero = %s", (numero,))
+        usuario = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return usuario
+    except Error as e:
+        print(f"❌ Error al obtener usuario: {e}")
+        return None
+
+def obtener_segmentos_usuario(usuario_id: int) -> List[str]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT segmento FROM usuario_segmentos
+            WHERE usuario_id = %s AND activo = TRUE
+        """, (usuario_id,))
+        segmentos = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        return segmentos
+    except Error as e:
+        print(f"❌ Error al obtener segmentos: {e}")
+        return []
+
+def configurar_segmentos_usuario_por_id(usuario_id: int, segmentos: List[str]) -> bool:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("UPDATE usuario_segmentos SET activo = FALSE WHERE usuario_id = %s", (usuario_id,))
+
+        for seg in segmentos:
+            cursor.execute("""
+                INSERT INTO usuario_segmentos (usuario_id, segmento, activo)
+                VALUES (%s, %s, TRUE)
+                ON DUPLICATE KEY UPDATE activo = TRUE
+            """, (usuario_id, seg))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"❌ Error al configurar segmentos: {e}")
+        return False
+
+def obtener_empresa_usuario_por_id(usuario_id: int) -> Optional[Dict]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT palabras_clave_custom FROM usuarios WHERE id = %s", (usuario_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not result or not result['palabras_clave_custom']:
+            return None
+
+        empresa = json.loads(result['palabras_clave_custom'])
+        return empresa
+    except Error as e:
+        print(f"❌ Error al obtener empresa: {e}")
+        return None
+
+def obtener_configuracion_usuario_por_id(usuario_id: int) -> Optional[Dict]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT alertas_realtime_activas, alertas_programadas_activas,
+                   score_minimo, max_oportunidades_alerta, horarios_alertas, dias_semana
+            FROM usuario_configuracion
+            WHERE usuario_id = %s
+        """, (usuario_id,))
+
+        config = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not config:
+            return {
+                'alertas_realtime_activas': True,
+                'alertas_programadas_activas': False,
+                'score_minimo': 30,
+                'max_oportunidades_alerta': 5,
+                'horarios_alertas': ['10:00', '19:00'],
+                'dias_semana': ['L', 'M', 'X', 'J', 'V']
+            }
+
+        if config.get('horarios_alertas'):
+            config['horarios_alertas'] = json.loads(config['horarios_alertas'])
+        else:
+            config['horarios_alertas'] = ['10:00', '19:00']
+
+        if config.get('dias_semana'):
+            config['dias_semana'] = json.loads(config['dias_semana'])
+        else:
+            config['dias_semana'] = ['L', 'M', 'X', 'J', 'V']
+
+        return config
+    except Error as e:
+        print(f"❌ Error al obtener configuración: {e}")
+        return None
+
+def actualizar_empresa_usuario(usuario_id: int, nombre_empresa: str = None, palabras_clave: Dict = None) -> bool:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        if palabras_clave:
+            palabras_json = json.dumps(palabras_clave, ensure_ascii=False)
+            cursor.execute("""
+                UPDATE usuarios SET palabras_clave_custom = %s WHERE id = %s
+            """, (palabras_json, usuario_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"❌ Error al actualizar empresa: {e}")
+        return False
+
+def actualizar_configuracion_usuario(usuario_id: int, **kwargs) -> bool:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        campos = []
+        valores = []
+
+        if 'alertas_realtime_activas' in kwargs:
+            campos.append("alertas_realtime_activas = %s")
+            valores.append(kwargs['alertas_realtime_activas'])
+
+        if 'alertas_programadas_activas' in kwargs:
+            campos.append("alertas_programadas_activas = %s")
+            valores.append(kwargs['alertas_programadas_activas'])
+
+        if 'score_minimo' in kwargs:
+            campos.append("score_minimo = %s")
+            valores.append(kwargs['score_minimo'])
+
+        if 'max_oportunidades_alerta' in kwargs:
+            campos.append("max_oportunidades_alerta = %s")
+            valores.append(kwargs['max_oportunidades_alerta'])
+
+        if 'horarios_alertas' in kwargs:
+            campos.append("horarios_alertas = %s")
+            valores.append(json.dumps(kwargs['horarios_alertas']))
+
+        if 'dias_semana' in kwargs:
+            campos.append("dias_semana = %s")
+            valores.append(json.dumps(kwargs['dias_semana']))
+
+        if not campos:
+            return True
+
+        valores.append(usuario_id)
+        query = f"UPDATE usuario_configuracion SET {', '.join(campos)} WHERE usuario_id = %s"
+
+        cursor.execute(query, valores)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"❌ Error al actualizar configuración: {e}")
+        return False
+
 if __name__ == "__main__":
     print("🔧 Inicializando base de datos...")
     inicializar_bd()
