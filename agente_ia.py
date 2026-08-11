@@ -308,8 +308,30 @@ _Vuelve a escanear más tarde con /escanear_"""
             {
                 "type": "function",
                 "function": {
+                    "name": "agregar_segmentos",
+                    "description": "⭐ USA ESTA cuando el usuario diga 'agrégalo', 'añádelo', 'agregar segmento', 'quiero también'. AGREGA segmentos SIN borrar los que ya tiene. Ejemplo: si tiene [43,80,81] y agrega [86], queda [43,80,81,86]",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario"
+                            },
+                            "segmentos_a_agregar": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Lista de códigos de segmentos a AGREGAR (ej: ['86'])"
+                            }
+                        },
+                        "required": ["numero_telefono", "segmentos_a_agregar"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "modificar_segmentos",
-                    "description": "Modifica los segmentos SEACE del usuario. Úsalo cuando el usuario quiera agregar o cambiar segmentos.",
+                    "description": "⚠️ SOLO úsala cuando el usuario diga 'cambia TODOS mis segmentos a...', 'reemplaza mis segmentos'. BORRA los anteriores y pone solo los nuevos. Ejemplo: si tiene [43,80,81] y modificas a [86], queda solo [86]",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -320,7 +342,7 @@ _Vuelve a escanear más tarde con /escanear_"""
                             "segmentos_nuevos": {
                                 "type": "array",
                                 "items": {"type": "string"},
-                                "description": "Lista de códigos de segmentos SEACE (ej: ['43', '45', '52'])"
+                                "description": "Lista COMPLETA de segmentos que reemplazarán todos los anteriores (ej: ['43', '45', '52'])"
                             }
                         },
                         "required": ["numero_telefono", "segmentos_nuevos"]
@@ -413,18 +435,24 @@ Tu trabajo es ayudar al usuario a:
 
 REGLAS CRÍTICAS (DEBES SEGUIRLAS AL PIE DE LA LETRA):
 1. YA TIENES EL NÚMERO DEL USUARIO ({numero_usuario}), no lo vuelvas a preguntar
-2. **NUNCA JAMÁS INVENTES INFORMACIÓN DE SEGMENTOS**: Si no puedes consultar el catálogo, admite que tuviste un error técnico
+2. **NUNCA JAMÁS INVENTES INFORMACIÓN**: Si no puedes consultar la base de datos, admite que tuviste un error técnico
 3. **DIFERENCIA ENTRE ERROR Y NO ENCONTRADO**:
    - Si la herramienta devuelve {{"error": "..."}}, di: "Tuve un problema técnico al buscar esa información. ¿Podrías intentar de nuevo?"
    - Si la herramienta devuelve {{"total_encontrados": 0}}, di: "No encontré segmentos con esa palabra. Prueba con sinónimos o palabras relacionadas."
-4. **SIEMPRE USA LAS HERRAMIENTAS** para buscar segmentos - NUNCA respondas de memoria
-5. **EXTRAE LA PALABRA CLAVE CORRECTA**:
-   - Si preguntan "hay segmentos de capacitaciones", busca "capacitacion" (sin plural, sin tilde)
-   - Si preguntan "sobre educación", busca "educacion"
-   - Si preguntan "de limpieza", busca "limpieza"
-   - Usa la raíz de la palabra, sin plurales ni conjugaciones
-6. Si el usuario pregunta por SU configuración, USA las herramientas automáticamente
-7. Cuando encuentres múltiples segmentos, muestra los más relevantes (máximo 5-7)
+4. **SIEMPRE USA LAS HERRAMIENTAS** - NUNCA respondas de memoria:
+   - Para buscar segmentos: usa buscar_segmentos_semanticamente()
+   - Para consultar configuración del usuario: usa consultar_segmentos_usuario()
+   - Para agregar segmentos: usa agregar_segmentos()
+   - Para reemplazar todos los segmentos: usa modificar_segmentos()
+5. **ANTES DE CONFIRMAR UNA ACCIÓN, EJECUTA LA HERRAMIENTA**:
+   - ❌ MAL: "He agregado el segmento 86" (sin llamar a la función)
+   - ✅ BIEN: Llamar agregar_segmentos(segmentos_a_agregar=["86"]), luego confirmar basándote en la respuesta
+6. **DESPUÉS DE MODIFICAR, SIEMPRE CONSULTA PARA CONFIRMAR**:
+   - Después de agregar_segmentos(), llama consultar_segmentos_usuario() para confirmar
+   - Muestra al usuario los segmentos finales basándote en la consulta real
+7. **DIFERENCIA ENTRE AGREGAR Y MODIFICAR**:
+   - "agrégalo" / "añádelo" → agregar_segmentos() (mantiene los anteriores)
+   - "cambia todos mis segmentos" → modificar_segmentos() (borra anteriores)
 8. RECUERDA EL CONTEXTO: Si ya propusiste una acción y el usuario dice "sí"/"ok"/"dale", EJECUTA LA ACCIÓN inmediatamente
 9. Sé conversacional, amigable y profesional
 10. Usa emojis para mejor visualización en WhatsApp
@@ -495,6 +523,7 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
                         "consultar_segmentos_usuario",
                         "consultar_empresa_usuario",
                         "consultar_configuracion_alertas",
+                        "agregar_segmentos",
                         "modificar_segmentos",
                         "modificar_empresa",
                         "modificar_configuracion_alertas"

@@ -338,13 +338,58 @@ def consultar_configuracion_alertas(numero_telefono):
     config = obtener_configuracion_usuario(usuario['id'])
     return config
 
-def modificar_segmentos(numero_telefono, segmentos_nuevos):
+def agregar_segmentos(numero_telefono, segmentos_a_agregar):
     """
-    Modifica los segmentos SEACE del usuario
+    AGREGA segmentos a los que ya tiene el usuario (NO reemplaza)
 
     Args:
         numero_telefono: Número de WhatsApp
-        segmentos_nuevos: Lista de segmentos (ej: ["43", "45", "52"])
+        segmentos_a_agregar: Lista de segmentos a agregar (ej: ["86", "90"])
+
+    Returns:
+        dict con resultado de la operación
+    """
+    if numero_telefono.startswith('+'):
+        numero_telefono = numero_telefono[1:]
+    if '@' in numero_telefono:
+        numero_telefono = numero_telefono.split('@')[0]
+
+    usuario = obtener_usuario_por_numero(numero_telefono)
+    if not usuario:
+        return {"error": "Usuario no encontrado", "exito": False}
+
+    try:
+        # Convertir a lista si viene como string
+        if isinstance(segmentos_a_agregar, str):
+            segmentos_a_agregar = [s.strip() for s in segmentos_a_agregar.split(',')]
+
+        # Obtener segmentos actuales
+        segmentos_actuales = obtener_segmentos_usuario(usuario['id'])
+
+        # Agregar nuevos segmentos sin duplicar
+        segmentos_finales = list(set(segmentos_actuales + segmentos_a_agregar))
+
+        # Actualizar en BD
+        exito = configurar_segmentos_usuario_por_id(usuario['id'], segmentos_finales)
+
+        return {
+            "exito": exito,
+            "segmentos_anteriores": segmentos_actuales,
+            "segmentos_agregados": segmentos_a_agregar,
+            "segmentos_finales": segmentos_finales,
+            "mensaje": f"Segmentos agregados correctamente. Ahora tienes {len(segmentos_finales)} segmentos activos." if exito else "Error al agregar segmentos"
+        }
+    except Exception as e:
+        return {"error": str(e), "exito": False}
+
+def modificar_segmentos(numero_telefono, segmentos_nuevos):
+    """
+    REEMPLAZA todos los segmentos del usuario (borra los anteriores)
+    Si quieres agregar sin borrar, usa agregar_segmentos()
+
+    Args:
+        numero_telefono: Número de WhatsApp
+        segmentos_nuevos: Lista completa de segmentos (ej: ["43", "45", "52"])
 
     Returns:
         dict con resultado de la operación
@@ -446,6 +491,7 @@ HERRAMIENTAS_DB = {
     "consultar_segmentos_usuario": consultar_segmentos_usuario,
     "consultar_empresa_usuario": consultar_empresa_usuario,
     "consultar_configuracion_alertas": consultar_configuracion_alertas,
+    "agregar_segmentos": agregar_segmentos,
     "modificar_segmentos": modificar_segmentos,
     "modificar_empresa": modificar_empresa,
     "modificar_configuracion_alertas": modificar_configuracion_alertas
