@@ -201,9 +201,10 @@ class ExcelGeneratorSEACE:
                 df_final = df_final.rename(columns=nombres_columnas)
 
                 nombre_segmento = obtener_nombre_segmento(segmento)
-                nombre_hoja = f"Seg {segmento}"
+                nombre_hoja = f"{segmento} - {nombre_segmento}"
+
                 if len(nombre_hoja) > 31:
-                    nombre_hoja = nombre_hoja[:31]
+                    nombre_hoja = f"{segmento} - {nombre_segmento[:25]}"
 
                 df_final.to_excel(writer, index=False, sheet_name=nombre_hoja)
 
