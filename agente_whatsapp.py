@@ -750,35 +750,32 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
                 'recomiend', 'mejor', 'conveniente', 'debería', 'deberia', 'últimas',
                 'ultimas', 'nuevas', 'hoy', 'mes', 'semana'
             ]):
-                print(f"🔍 Pregunta sobre oportunidades detectada. Escaneando SEACE primero...")
+                # Detectar si el usuario menciona un segmento específico
+                import re
+                segmento_match = re.search(r'segmento\s+(\d+)', mensaje_lower)
+                segmento = segmento_match.group(1) if segmento_match else "43"
+
+                print(f"🔍 Pregunta sobre oportunidades detectada. Escaneando segmento {segmento}...")
 
                 # ESCANEAR primero para tener datos frescos
                 try:
-                    resultado = subprocess.run(
-                        ['python3', 'seace_extractor_realtime.py'],
-                        capture_output=True,
-                        text=True,
-                        timeout=60
-                    )
+                    # Llamar al extractor directamente con el segmento
+                    from seace_extractor_realtime import extraer_oportunidades_realtime
+                    resultado_data = extraer_oportunidades_realtime(segmento)
 
-                    # Cargar resultados recién escaneados
-                    archivos_json = [f for f in os.listdir('.') if f.startswith('seace_todas_oportunidades_') and f.endswith('.json')]
-                    if archivos_json:
-                        archivo_mas_reciente = max(archivos_json, key=os.path.getctime)
-                        with open(archivo_mas_reciente, 'r') as f:
-                            data = json.load(f)
-                        oportunidades = data.get('oportunidades', [])
+                    # El resultado ya está en memoria
+                    oportunidades = resultado_data.get('oportunidades', [])
 
-                        if oportunidades:
-                            print(f"🤖 Respondiendo con IA sobre {len(oportunidades)} oportunidades: {mensaje[:50]}...")
-                            return self.agente_ia.responder_pregunta(mensaje, oportunidades)
-                        else:
-                            return "📊 No se encontraron oportunidades activas en este momento."
+                    if oportunidades:
+                        print(f"🤖 Respondiendo con IA sobre {len(oportunidades)} oportunidades del segmento {segmento}: {mensaje[:50]}...")
+                        return self.agente_ia.responder_pregunta(mensaje, oportunidades)
                     else:
-                        return "⚠️ No pude obtener datos de SEACE. Intenta con /escanear"
+                        return f"📊 No se encontraron oportunidades activas en el segmento {segmento}."
 
                 except Exception as e:
                     print(f"⚠️ Error escaneando para IA: {e}")
+                    import traceback
+                    traceback.print_exc()
                     return f"❌ Error al buscar oportunidades: {str(e)[:100]}"
 
         # Si llegamos aquí y hay IA, dejar que la IA maneje el mensaje
