@@ -648,7 +648,7 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
             return {"segmento": None, "encontrado": False, "mensaje_error": "IA no disponible"}
 
         try:
-            from database_manager import obtener_segmentos_usuario, obtener_nombre_segmento
+            from database_mysql import obtener_usuario_por_numero, obtener_segmentos_usuario, obtener_nombre_segmento
 
             # Normalizar número
             numero_normalizado = numero_usuario
@@ -660,9 +660,20 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
             print(f"🔍 [detectar_segmento] Número original: {numero_usuario}")
             print(f"🔍 [detectar_segmento] Número normalizado: {numero_normalizado}")
 
-            # Obtener segmentos del usuario
-            segmentos_usuario = obtener_segmentos_usuario(numero_normalizado)
-            print(f"🔍 [detectar_segmento] Segmentos obtenidos: {segmentos_usuario}")
+            # Obtener usuario de MySQL
+            usuario = obtener_usuario_por_numero(numero_normalizado)
+            print(f"🔍 [detectar_segmento] Usuario obtenido: {usuario}")
+
+            if not usuario:
+                return {
+                    "segmento": None,
+                    "encontrado": False,
+                    "mensaje_error": "⚠️ Usuario no encontrado. Usa `/registrar` primero."
+                }
+
+            # Obtener segmentos del usuario (database_mysql requiere usuario_id)
+            segmentos_usuario = obtener_segmentos_usuario(usuario['id'])
+            print(f"🔍 [detectar_segmento] Segmentos obtenidos de MySQL: {segmentos_usuario}")
 
             if not segmentos_usuario:
                 return {
