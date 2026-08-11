@@ -237,7 +237,72 @@ OPENAI_API_KEY=sk-proj-...
 
 ## 🧪 Testing
 
-### Test completo del flujo
+### Método 1: Script automático (Recomendado)
+
+```bash
+# Simula 1 oportunidad nueva
+python3 simular_oportunidad_nueva.py 51967717179
+
+# Simula 5 oportunidades nuevas
+python3 simular_oportunidad_nueva.py 51967717179 5
+```
+
+El script:
+1. Selecciona oportunidades aleatorias del historial
+2. Te muestra cuáles borrará
+3. Pide confirmación
+4. Las borra del historial
+5. Te dice cómo ejecutar el monitor
+
+Luego ejecuta:
+```bash
+python3 monitor_nuevas_oportunidades.py --test
+```
+
+Deberías recibir alertas en WhatsApp ✅
+
+### Método 2: Script bash completo
+
+```bash
+./test_monitor_nuevas.sh
+```
+
+Hace todo automáticamente:
+- Muestra estado del historial
+- Borra 1 oportunidad
+- Ejecuta el monitor
+- Te dice qué verificar
+
+### Método 3: Manual con MySQL
+
+```bash
+# 1. Ver historial actual
+mysql -u root -p seace_monitor -e "
+SELECT COUNT(*) as total, MAX(fecha_visto) as ultima
+FROM historial_oportunidades
+WHERE usuario_id = 1
+"
+
+# 2. Borrar UNA oportunidad específica
+mysql -u root -p seace_monitor -e "
+DELETE FROM historial_oportunidades
+WHERE usuario_id = 1
+AND nomenclatura = 'LP-SM-14-2026-XXXXX'
+LIMIT 1
+"
+
+# 3. Ejecutar monitor
+python3 monitor_nuevas_oportunidades.py --test
+
+# 4. Verificar que se agregó de nuevo al historial
+mysql -u root -p seace_monitor -e "
+SELECT * FROM historial_oportunidades
+WHERE nomenclatura = 'LP-SM-14-2026-XXXXX'
+"
+```
+
+### Test completo del flujo (desde cero)
+
 ```bash
 # 1. Limpiar historial
 mysql -u root -p seace_monitor -e "DELETE FROM historial_oportunidades WHERE usuario_id = 1"
@@ -248,16 +313,13 @@ Usuario: /init
 # 3. Verificar historial
 mysql -u root -p seace_monitor -e "SELECT COUNT(*) FROM historial_oportunidades WHERE usuario_id = 1"
 
-# 4. Test del monitor
+# 4. Simular nueva oportunidad
+python3 simular_oportunidad_nueva.py 51967717179 3
+
+# 5. Ejecutar monitor
 python3 monitor_nuevas_oportunidades.py --test
 
-# 5. Agregar oportunidad falsa para simular "nueva"
-# (Esperar a que SEACE publique una nueva real, o...)
-mysql -u root -p seace_monitor -e "DELETE FROM historial_oportunidades WHERE nomenclatura = 'LP-SM-XXX-2026' AND usuario_id = 1"
-
-# 6. Ejecutar monitor de nuevo
-python3 monitor_nuevas_oportunidades.py --test
-# Debería detectar LP-SM-XXX-2026 como nueva
+# 6. Verificar WhatsApp - deberían llegar 3 alertas
 ```
 
 ## 📊 Monitoreo
