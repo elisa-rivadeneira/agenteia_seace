@@ -3,14 +3,15 @@ Herramientas de base de datos para el agente IA
 Permite al agente consultar y modificar la configuración del usuario
 """
 
-from database_mysql import (
+from database_manager import (
     obtener_usuario_por_numero,
     obtener_segmentos_usuario,
     obtener_configuracion_usuario_por_id,
     obtener_empresa_usuario_por_id,
     configurar_segmentos_usuario_por_id,
     actualizar_empresa_usuario,
-    actualizar_configuracion_usuario
+    actualizar_configuracion_usuario,
+    obtener_nombre_segmento
 )
 import json
 import os
@@ -500,16 +501,8 @@ def extraer_oportunidades_seace(segmento, numero_telefono=None):
             if '@' in numero_telefono:
                 numero_telefono = numero_telefono.split('@')[0]
 
-            # Primero obtener el usuario por número
-            usuario = obtener_usuario_por_numero(numero_telefono)
-            if not usuario:
-                return {
-                    "exito": False,
-                    "error": "Usuario no encontrado en la base de datos"
-                }
-
-            # Ahora obtener segmentos usando el usuario_id
-            segmentos_usuario = obtener_segmentos_usuario(usuario['id'])
+            # Obtener segmentos del usuario (database_manager acepta número directamente)
+            segmentos_usuario = obtener_segmentos_usuario(numero_telefono)
             if segmento not in segmentos_usuario:
                 return {
                     "exito": False,
