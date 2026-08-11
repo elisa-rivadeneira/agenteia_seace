@@ -437,7 +437,22 @@ IMPORTANTE:
 
             # Si la IA quiere usar herramientas
             if tool_calls:
-                messages.append(response_message)
+                # Convertir response_message a dict para poder guardarlo
+                response_dict = {
+                    "role": "assistant",
+                    "content": response_message.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments
+                            }
+                        } for tc in tool_calls
+                    ]
+                }
+                messages.append(response_dict)
 
                 # Ejecutar cada tool call
                 for tool_call in tool_calls:
