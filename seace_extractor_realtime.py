@@ -8,14 +8,18 @@ import requests
 import json
 from datetime import datetime
 
-def extraer_oportunidades_realtime():
+def extraer_oportunidades_realtime(segmento="43"):
     """
     Extrae oportunidades EN TIEMPO REAL desde el API oficial de SEACE
+
+    Args:
+        segmento: Código del segmento SEACE (default: "43")
     """
     print("="*80)
     print(" EXTRACTOR SEACE - TIEMPO REAL (API OFICIAL)")
     print("="*80)
     print(f"\nFecha/Hora: {datetime.now()}")
+    print(f"📂 Segmento: {segmento}")
 
     # Cargar configuración
     try:
@@ -30,8 +34,8 @@ def extraer_oportunidades_realtime():
 
     print("\n🌐 Consultando API oficial de SEACE...")
 
-    # API oficial de SEACE para segmento 43 (Tecnologías)
-    url = "https://prod4.seace.gob.pe:8086/api/oportunidades/listaProcesosCubso/codigoSegmento/43"
+    # API oficial de SEACE - dinámico por segmento
+    url = f"https://prod4.seace.gob.pe:8086/api/oportunidades/listaProcesosCubso/codigoSegmento/{segmento}"
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0',
@@ -50,7 +54,7 @@ def extraer_oportunidades_realtime():
 
         if response.status_code != 200:
             print(f"❌ Error: HTTP {response.status_code}")
-            return crear_resultado_vacio()
+            return crear_resultado_vacio(segmento)
 
         # Parsear JSON
         data = response.json()
@@ -123,7 +127,7 @@ def extraer_oportunidades_realtime():
         resultado = {
             "fecha_extraccion": datetime.now().isoformat(),
             "fuente": "SEACE API Tiempo Real",
-            "segmento": "43",
+            "segmento": str(segmento),
             "total_oportunidades": len(oportunidades),
             "oportunidades": oportunidades
         }
@@ -158,14 +162,14 @@ def extraer_oportunidades_realtime():
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
-        return crear_resultado_vacio()
+        return crear_resultado_vacio(segmento)
 
-def crear_resultado_vacio():
+def crear_resultado_vacio(segmento="43"):
     """Crea resultado vacío en caso de error"""
     resultado = {
         "fecha_extraccion": datetime.now().isoformat(),
         "fuente": "SEACE API Tiempo Real (Error)",
-        "segmento": "43",
+        "segmento": str(segmento),
         "total_oportunidades": 0,
         "oportunidades": []
     }
