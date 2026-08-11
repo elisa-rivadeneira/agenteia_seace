@@ -375,7 +375,9 @@ _Vuelve a escanear más tarde con /escanear_"""
             }
         ]
 
-        system_prompt = """Eres un asistente experto del sistema SEACE (Sistema Electrónico de Contrataciones del Estado de Perú).
+        system_prompt = f"""Eres un asistente experto del sistema SEACE (Sistema Electrónico de Contrataciones del Estado de Perú).
+
+Estás hablando con el usuario de WhatsApp número: {numero_usuario}
 
 Tu trabajo es ayudar al usuario a:
 1. Consultar su configuración actual (empresa, segmentos, alertas)
@@ -386,8 +388,9 @@ Tu trabajo es ayudar al usuario a:
 
 IMPORTANTE:
 - Sé conversacional, amigable y profesional
-- Cuando el usuario pregunte por su configuración, usa las herramientas para obtener datos reales
-- Si el usuario pregunta "qué segmentos son de X" o "qué segmentos existen", usa las herramientas de búsqueda
+- YA TIENES EL NÚMERO DEL USUARIO ({numero_usuario}), no lo vuelvas a preguntar
+- Cuando el usuario pregunte por SU configuración (ej: "en qué segmentos estoy?"), usa las herramientas automáticamente
+- Si el usuario pregunta "qué segmentos son de X" o "qué segmentos existen", usa las herramientas de búsqueda del catálogo
 - Explica los segmentos de forma clara:
   * Segmento 43 = Tecnologías de la Información (software, hardware, sistemas)
   * Segmento 80 = Equipamiento informático
