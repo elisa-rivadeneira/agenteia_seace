@@ -481,6 +481,57 @@ def modificar_configuracion_alertas(numero_telefono, **kwargs):
     except Exception as e:
         return {"error": str(e), "exito": False}
 
+def extraer_oportunidades_seace(segmento, numero_telefono=None):
+    """
+    Extrae oportunidades de SEACE para un segmento específico
+
+    Args:
+        segmento: Código del segmento (ej: "43", "81", "86")
+        numero_telefono: Número del usuario (opcional, para verificar permisos)
+
+    Returns:
+        dict con las oportunidades encontradas
+    """
+    try:
+        # Verificar que el usuario tenga el segmento configurado
+        if numero_telefono:
+            if numero_telefono.startswith('+'):
+                numero_telefono = numero_telefono[1:]
+            if '@' in numero_telefono:
+                numero_telefono = numero_telefono.split('@')[0]
+
+            segmentos_usuario = obtener_segmentos_usuario(numero_telefono)
+            if segmento not in segmentos_usuario:
+                return {
+                    "exito": False,
+                    "error": f"El segmento {segmento} no está en tu configuración",
+                    "segmentos_usuario": segmentos_usuario
+                }
+
+        # Importar y ejecutar el extractor
+        from seace_extractor_realtime import extraer_oportunidades_realtime
+
+        print(f"🔍 Extrayendo oportunidades del segmento {segmento}...")
+        resultado = extraer_oportunidades_realtime(segmento)
+
+        oportunidades = resultado.get('oportunidades', [])
+
+        return {
+            "exito": True,
+            "segmento": segmento,
+            "total_oportunidades": len(oportunidades),
+            "oportunidades": oportunidades[:10],  # Solo las top 10 para no saturar
+            "mensaje": f"✅ Encontradas {len(oportunidades)} oportunidades en el segmento {segmento}"
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "exito": False,
+            "error": f"Error al extraer oportunidades: {str(e)}"
+        }
+
 # Diccionario de funciones disponibles para el agente
 HERRAMIENTAS_DB = {
     "obtener_catalogo_segmentos": obtener_catalogo_segmentos,
@@ -494,5 +545,6 @@ HERRAMIENTAS_DB = {
     "agregar_segmentos": agregar_segmentos,
     "modificar_segmentos": modificar_segmentos,
     "modificar_empresa": modificar_empresa,
-    "modificar_configuracion_alertas": modificar_configuracion_alertas
+    "modificar_configuracion_alertas": modificar_configuracion_alertas,
+    "extraer_oportunidades_seace": extraer_oportunidades_seace
 }

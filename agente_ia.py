@@ -369,6 +369,27 @@ _Vuelve a escanear más tarde con /escanear_"""
             {
                 "type": "function",
                 "function": {
+                    "name": "extraer_oportunidades_seace",
+                    "description": "🔥 HERRAMIENTA PRINCIPAL para extraer oportunidades de SEACE. USA ESTA cuando el usuario pregunte sobre oportunidades, licitaciones, o diga 'sí' después de hablar de segmentos. Extrae licitaciones activas de un segmento específico.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "segmento": {
+                                "type": "string",
+                                "description": "Código del segmento SEACE (ej: '43', '81', '86')"
+                            },
+                            "numero_telefono": {
+                                "type": "string",
+                                "description": "Número de teléfono del usuario (se inyecta automáticamente)"
+                            }
+                        },
+                        "required": ["segmento"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "modificar_empresa",
                     "description": "Modifica el nombre de la empresa o las palabras clave de búsqueda",
                     "parameters": {
@@ -473,7 +494,14 @@ Tu trabajo es ayudar al usuario a:
    - ❌ INCORRECTO: "¡Hola! ¿Cómo puedo ayudarte hoy?" (esto pierde el contexto)
    - Si propusiste una acción y el usuario dice "sí"/"dale"/"hazlo" → EJECUTA la acción inmediatamente
 
-8. Sé conversacional pero NUNCA inventes datos
+8. **CUANDO EXTRAER OPORTUNIDADES DE SEACE**:
+   - Usuario pregunta "qué oportunidades hay" → DEBES llamar extraer_oportunidades_seace()
+   - Usuario dice "sí" después de hablar de segmentos o decir "mostraré las oportunidades" → DEBES llamar extraer_oportunidades_seace()
+   - Usuario pregunta sobre "licitaciones del segmento X" → DEBES llamar extraer_oportunidades_seace(segmento=X)
+   - SIEMPRE que hables de mostrar oportunidades, DEBES llamar esta función
+   - NUNCA digas "no puedo hacer búsquedas" - SÍ PUEDES usando extraer_oportunidades_seace()
+
+9. Sé conversacional pero NUNCA inventes datos
 
 EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOGO):
 - Segmento 43 = Tecnologías de la Información
@@ -553,7 +581,8 @@ EJEMPLOS DE SEGMENTOS REALES (SOLO COMO REFERENCIA, SIEMPRE CONSULTA EL CATÁLOG
                         "agregar_segmentos",
                         "modificar_segmentos",
                         "modificar_empresa",
-                        "modificar_configuracion_alertas"
+                        "modificar_configuracion_alertas",
+                        "extraer_oportunidades_seace"
                     ]
 
                     if function_name in funciones_que_necesitan_numero:
