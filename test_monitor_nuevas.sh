@@ -22,11 +22,11 @@ GROUP BY u.id
 
 echo ""
 echo "================================================================================"
-echo "🔧 PASO 1: Borrar UNA oportunidad del historial (para simular nueva)"
+echo "🔧 PASO 1: Seleccionar oportunidad para simular como nueva"
 echo "================================================================================"
 echo ""
 
-# Guardar la nomenclatura que vamos a borrar
+# PRIMERO: Guardar la nomenclatura que vamos a borrar (sin borrar aún)
 BORRADA=$(mysql -u root -p123456 seace_monitor -se "
 SELECT nomenclatura
 FROM historial_oportunidades
@@ -35,9 +35,16 @@ ORDER BY RAND()
 LIMIT 1
 ")
 
-echo "📝 Oportunidad a simular como nueva: $BORRADA"
+echo "📝 Oportunidad seleccionada: $BORRADA"
+echo ""
+read -p "¿Borrar esta oportunidad del historial? (s/n): " CONFIRMAR
 
-# Borrar del historial
+if [ "$CONFIRMAR" != "s" ]; then
+    echo "❌ Cancelado - No se borró nada"
+    exit 1
+fi
+
+# SEGUNDO: Ahora sí borrar del historial
 mysql -u root -p123456 seace_monitor -e "
 DELETE FROM historial_oportunidades
 WHERE usuario_id = 1

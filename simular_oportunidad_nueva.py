@@ -37,7 +37,7 @@ def simular_oportunidad_nueva(numero_usuario, cantidad=1):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Obtener oportunidades aleatorias del historial
+        # PRIMERO: Obtener oportunidades aleatorias del historial (sin borrar aún)
         cursor.execute("""
             SELECT h.id, h.nomenclatura, h.segmento, h.fecha_visto
             FROM historial_oportunidades h
@@ -54,22 +54,24 @@ def simular_oportunidad_nueva(numero_usuario, cantidad=1):
             conn.close()
             return
 
+        # SEGUNDO: Mostrar cuáles se borrarán
         print(f"\n📋 Oportunidades que se simularán como NUEVAS:\n")
 
         for i, op in enumerate(oportunidades, 1):
             print(f"{i}. {op['nomenclatura']} (Segmento {op['segmento']})")
             print(f"   Visto: {op['fecha_visto']}")
 
-        # Confirmar
-        confirmar = input(f"\n¿Borrar estas {cantidad} oportunidad(es) del historial? (s/n): ").lower()
+        # TERCERO: Pedir confirmación ANTES de borrar
+        print(f"\n⚠️  Esto borrará estas {len(oportunidades)} oportunidad(es) del historial")
+        confirmar = input(f"¿Continuar? (s/n): ").lower()
 
         if confirmar != 's':
-            print("❌ Cancelado")
+            print("❌ Cancelado - No se borró nada")
             cursor.close()
             conn.close()
             return
 
-        # Borrar del historial
+        # CUARTO: Ahora sí borrar del historial
         ids_borrar = [op['id'] for op in oportunidades]
         placeholders = ','.join(['%s'] * len(ids_borrar))
 
