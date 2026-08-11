@@ -85,16 +85,27 @@ def buscar_segmentos_por_palabra(palabra_clave):
         dict con segmentos que coinciden
     """
     try:
+        import unicodedata
+
+        def normalizar_texto(texto):
+            """Normaliza texto removiendo acentos y convirtiendo a minúsculas"""
+            texto = texto.lower()
+            # Remover acentos
+            texto = unicodedata.normalize('NFD', texto)
+            texto = ''.join(c for c in texto if unicodedata.category(c) != 'Mn')
+            return texto
+
         catalogo_result = obtener_catalogo_segmentos()
         if "error" in catalogo_result:
             return catalogo_result
 
         catalogo = catalogo_result["segmentos"]
-        palabra_lower = palabra_clave.lower()
+        palabra_normalizada = normalizar_texto(palabra_clave)
 
         resultados = {}
         for codigo, descripcion in catalogo.items():
-            if palabra_lower in descripcion.lower():
+            descripcion_normalizada = normalizar_texto(descripcion)
+            if palabra_normalizada in descripcion_normalizada:
                 resultados[codigo] = descripcion
 
         return {
