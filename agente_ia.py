@@ -252,14 +252,36 @@ _Vuelve a escanear más tarde con /escanear_"""
             {
                 "type": "function",
                 "function": {
+                    "name": "buscar_segmentos_semanticamente",
+                    "description": "Búsqueda SEMÁNTICA de segmentos usando IA. USA ESTA HERRAMIENTA SIEMPRE para búsquedas de usuario. Tolera errores de escritura, entiende sinónimos y contexto. Ejemplo: 'capcitaciones', 'educar', 'formación' encontrarán 'Servicios de educación y capacitación'",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "consulta_usuario": {
+                                "type": "string",
+                                "description": "Consulta del usuario tal cual (ej: 'capacitaciones', 'capcitaciones', 'software', 'educar')"
+                            },
+                            "top_k": {
+                                "type": "integer",
+                                "description": "Número máximo de resultados más similares (default: 5)",
+                                "default": 5
+                            }
+                        },
+                        "required": ["consulta_usuario"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "buscar_segmentos_por_palabra",
-                    "description": "Busca segmentos SEACE que contengan una palabra clave. Úsalo cuando el usuario pregunte 'qué segmentos son de programación' o 'segmentos relacionados con salud'",
+                    "description": "Búsqueda LITERAL por palabra (fallback). Solo úsala si buscar_segmentos_semanticamente falla",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "palabra_clave": {
                                 "type": "string",
-                                "description": "Palabra clave a buscar en las descripciones de segmentos (ej: 'programación', 'salud', 'construcción')"
+                                "description": "Palabra clave exacta"
                             }
                         },
                         "required": ["palabra_clave"]

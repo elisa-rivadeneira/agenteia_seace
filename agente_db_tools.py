@@ -14,6 +14,19 @@ from database_mysql import (
 )
 import json
 import os
+import numpy as np
+from openai import OpenAI
+
+# Cliente OpenAI para embeddings
+_openai_client = None
+
+def get_openai_client():
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.getenv('OPENAI_API_KEY')
+        if api_key:
+            _openai_client = OpenAI(api_key=api_key)
+    return _openai_client
 
 def obtener_catalogo_segmentos():
     """
@@ -73,6 +86,79 @@ def buscar_segmento_por_codigo(codigo):
             }
     except Exception as e:
         return {"error": f"Error en búsqueda: {str(e)}"}
+
+def buscar_segmentos_semanticamente(consulta_usuario, top_k=5):
+    """
+    Búsqueda semántica de segmentos usando embeddings de OpenAI
+    Tolera errores de escritura y entiende sinónimos
+
+    Args:
+        consulta_usuario: Consulta en lenguaje natural (ej: "capacitaciones", "capcitaciones", "educar")
+        top_k: Número máximo de resultados más similares (default: 5)
+
+    Returns:
+        dict con segmentos más similares y sus scores de similitud
+    """
+    try:
+        client = get_openai_client()
+        if not client:
+            return {"error": "OpenAI API no disponible"}
+
+        # Cargar catálogo
+        catalogo_result = obtener_catalogo_segmentos()
+        if "error" in catalogo_result:
+            return catalogo_result
+
+        catalogo = catalogo_result["segmentos"]
+
+        # Generar embedding de la consulta
+        consulta_embedding_response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=consulta_usuario
+        )
+        consulta_embedding = np.array(consulta_embedding_response.data[0].embedding)
+
+        # Generar embeddings de todos los segmentos
+        textos_segmentos = [f"{codigo}: {nombre}" for codigo, nombre in catalogo.items()]
+
+        segmentos_embeddings_response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=textos_segmentos
+        )
+
+        # Calcular similitud coseno
+        resultados = []
+        for i, (codigo, nombre) in enumerate(catalogo.items()):
+            segmento_embedding = np.array(segmentos_embeddings_response.data[i].embedding)
+
+            # Similitud coseno
+            similitud = np.dot(consulta_embedding, segmento_embedding) / (
+                np.linalg.norm(consulta_embedding) * np.linalg.norm(segmento_embedding)
+            )
+
+            resultados.append({
+                "codigo": codigo,
+                "nombre": nombre,
+                "similitud": float(similitud)
+            })
+
+        # Ordenar por similitud descendente
+        resultados.sort(key=lambda x: x["similitud"], reverse=True)
+
+        # Tomar top_k más relevantes (similitud > 0.5 para filtrar resultados poco relevantes)
+        resultados_filtrados = [r for r in resultados[:top_k] if r["similitud"] > 0.5]
+
+        return {
+            "consulta": consulta_usuario,
+            "total_encontrados": len(resultados_filtrados),
+            "segmentos_encontrados": {
+                r["codigo"]: f"{r['nombre']} (similitud: {r['similitud']:.2%})"
+                for r in resultados_filtrados
+            }
+        }
+
+    except Exception as e:
+        return {"error": f"Error en búsqueda semántica: {str(e)}"}
 
 def buscar_segmentos_por_palabra(palabra_clave):
     """
@@ -329,6 +415,7 @@ HERRAMIENTAS_DB = {
     "obtener_catalogo_segmentos": obtener_catalogo_segmentos,
     "buscar_segmento_por_codigo": buscar_segmento_por_codigo,
     "buscar_segmentos_por_palabra": buscar_segmentos_por_palabra,
+    "buscar_segmentos_semanticamente": buscar_segmentos_semanticamente,
     "obtener_perfil_completo": obtener_perfil_completo,
     "consultar_segmentos_usuario": consultar_segmentos_usuario,
     "consultar_empresa_usuario": consultar_empresa_usuario,
