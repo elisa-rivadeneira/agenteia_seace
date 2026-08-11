@@ -225,29 +225,35 @@ def enviar_excel_whatsapp(numero_destino, archivo_path):
         print(f"❌ Archivo no encontrado: {archivo_path}")
         return False
 
-    # Leer el archivo
+    # Leer el archivo y convertir a base64
     try:
+        import base64
+
         with open(archivo_path, 'rb') as f:
-            files = {
-                'mediafile': (os.path.basename(archivo_path), f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            }
+            file_content = f.read()
+            file_base64 = base64.b64encode(file_content).decode('utf-8')
 
-            data = {
-                'number': numero_whatsapp,
-                'mediatype': 'document',
-                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'caption': '📊 Reporte de Oportunidades SEACE'
-            }
+        headers['Content-Type'] = 'application/json'
 
-            print(f"📤 Enviando Excel a {numero_whatsapp}...")
-            response = requests.post(url, headers=headers, data=data, files=files)
+        payload = {
+            'number': numero_whatsapp,
+            'mediatype': 'document',
+            'fileName': os.path.basename(archivo_path),
+            'media': file_base64,
+            'caption': '📊 Reporte de Oportunidades SEACE'
+        }
 
-            if response.status_code == 200 or response.status_code == 201:
-                print(f"✅ Excel enviado correctamente")
-                return True
-            else:
-                print(f"❌ Error al enviar Excel: {response.status_code} - {response.text}")
-                return False
+        print(f"📤 Enviando Excel a {numero_whatsapp}...")
+        print(f"📤 Tamaño archivo: {os.path.getsize(archivo_path)} bytes")
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200 or response.status_code == 201:
+            print(f"✅ Excel enviado correctamente")
+            return True
+        else:
+            print(f"❌ Error al enviar Excel: {response.status_code} - {response.text}")
+            return False
 
     except Exception as e:
         print(f"❌ Error al enviar Excel: {e}")
