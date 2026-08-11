@@ -501,14 +501,24 @@ def extraer_oportunidades_seace(segmento, numero_telefono=None):
             if '@' in numero_telefono:
                 numero_telefono = numero_telefono.split('@')[0]
 
+            print(f"🔍 [extraer_oportunidades_seace] Número normalizado: {numero_telefono}")
+
             # Obtener segmentos del usuario (database_manager acepta número directamente)
             segmentos_usuario = obtener_segmentos_usuario(numero_telefono)
+
+            print(f"🔍 [extraer_oportunidades_seace] Segmentos obtenidos de BD: {segmentos_usuario}")
+            print(f"🔍 [extraer_oportunidades_seace] Segmento solicitado: {segmento}")
+            print(f"🔍 [extraer_oportunidades_seace] Segmento en lista? {segmento in segmentos_usuario}")
+
             if segmento not in segmentos_usuario:
+                print(f"❌ [extraer_oportunidades_seace] Segmento {segmento} NO encontrado en {segmentos_usuario}")
                 return {
                     "exito": False,
                     "error": f"El segmento {segmento} no está en tu configuración",
                     "segmentos_usuario": segmentos_usuario
                 }
+
+            print(f"✅ [extraer_oportunidades_seace] Segmento {segmento} verificado correctamente")
 
         # Importar y ejecutar el extractor
         from seace_extractor_realtime import extraer_oportunidades_realtime
