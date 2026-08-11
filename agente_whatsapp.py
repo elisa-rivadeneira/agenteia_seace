@@ -684,6 +684,12 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
         """
         from database_mysql import get_connection, obtener_usuario_por_numero
 
+        # Normalizar número
+        if '@' in numero_usuario:
+            numero_usuario = numero_usuario.split('@')[0]
+        if numero_usuario.startswith('+'):
+            numero_usuario = numero_usuario[1:]
+
         try:
             usuario = obtener_usuario_por_numero(numero_usuario)
             if not usuario:
@@ -721,6 +727,12 @@ Usa `/missegmentos` para ver todos tus segmentos activos"""
 
         if not numero_usuario:
             return "❌ Error: No se pudo identificar el usuario"
+
+        # Normalizar número (quitar @s.whatsapp.net si existe)
+        if '@' in numero_usuario:
+            numero_usuario = numero_usuario.split('@')[0]
+        if numero_usuario.startswith('+'):
+            numero_usuario = numero_usuario[1:]
 
         mensaje_inicial = """🔧 *INICIALIZANDO SISTEMA DE ALERTAS*
 
