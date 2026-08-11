@@ -500,7 +500,16 @@ def extraer_oportunidades_seace(segmento, numero_telefono=None):
             if '@' in numero_telefono:
                 numero_telefono = numero_telefono.split('@')[0]
 
-            segmentos_usuario = obtener_segmentos_usuario(numero_telefono)
+            # Primero obtener el usuario por número
+            usuario = obtener_usuario_por_numero(numero_telefono)
+            if not usuario:
+                return {
+                    "exito": False,
+                    "error": "Usuario no encontrado en la base de datos"
+                }
+
+            # Ahora obtener segmentos usando el usuario_id
+            segmentos_usuario = obtener_segmentos_usuario(usuario['id'])
             if segmento not in segmentos_usuario:
                 return {
                     "exito": False,
