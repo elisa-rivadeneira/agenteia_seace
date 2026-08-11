@@ -16,6 +16,10 @@ import json
 import os
 import numpy as np
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 # Cliente OpenAI para embeddings
 _openai_client = None
@@ -92,6 +96,8 @@ def buscar_segmentos_semanticamente(consulta_usuario, top_k=5):
     Búsqueda semántica de segmentos usando embeddings de OpenAI
     Tolera errores de escritura y entiende sinónimos
 
+    Si OpenAI no está disponible, hace fallback a búsqueda literal por palabra
+
     Args:
         consulta_usuario: Consulta en lenguaje natural (ej: "capacitaciones", "capcitaciones", "educar")
         top_k: Número máximo de resultados más similares (default: 5)
@@ -102,7 +108,9 @@ def buscar_segmentos_semanticamente(consulta_usuario, top_k=5):
     try:
         client = get_openai_client()
         if not client:
-            return {"error": "OpenAI API no disponible"}
+            # Fallback a búsqueda literal si OpenAI no disponible
+            print("⚠️ OpenAI no disponible, usando búsqueda literal como fallback")
+            return buscar_segmentos_por_palabra(consulta_usuario)
 
         # Cargar catálogo
         catalogo_result = obtener_catalogo_segmentos()
@@ -145,8 +153,13 @@ def buscar_segmentos_semanticamente(consulta_usuario, top_k=5):
         # Ordenar por similitud descendente
         resultados.sort(key=lambda x: x["similitud"], reverse=True)
 
-        # Tomar top_k más relevantes (similitud > 0.5 para filtrar resultados poco relevantes)
-        resultados_filtrados = [r for r in resultados[:top_k] if r["similitud"] > 0.5]
+        # Tomar top_k más relevantes (similitud > 0.35 para capturar errores de escritura y sinónimos)
+        resultados_filtrados = [r for r in resultados[:top_k] if r["similitud"] > 0.35]
+
+        # Si no encuentra nada con similitud semántica, hacer fallback a búsqueda literal
+        if not resultados_filtrados:
+            print("⚠️ Similitud muy baja, intentando búsqueda literal como fallback")
+            return buscar_segmentos_por_palabra(consulta_usuario)
 
         return {
             "consulta": consulta_usuario,
@@ -158,7 +171,9 @@ def buscar_segmentos_semanticamente(consulta_usuario, top_k=5):
         }
 
     except Exception as e:
-        return {"error": f"Error en búsqueda semántica: {str(e)}"}
+        # Fallback a búsqueda literal si hay error
+        print(f"⚠️ Error en búsqueda semántica: {e}, usando búsqueda literal como fallback")
+        return buscar_segmentos_por_palabra(consulta_usuario)
 
 def buscar_segmentos_por_palabra(palabra_clave):
     """
@@ -181,17 +196,28 @@ def buscar_segmentos_por_palabra(palabra_clave):
             texto = ''.join(c for c in texto if unicodedata.category(c) != 'Mn')
             return texto
 
+        def singularizar(palabra):
+            """Intenta convertir plural a singular (español básico)"""
+            if len(palabra) > 3 and palabra.endswith('es'):
+                return palabra[:-2]
+            elif len(palabra) > 2 and palabra.endswith('s'):
+                return palabra[:-1]
+            return palabra
+
         catalogo_result = obtener_catalogo_segmentos()
         if "error" in catalogo_result:
             return catalogo_result
 
         catalogo = catalogo_result["segmentos"]
         palabra_normalizada = normalizar_texto(palabra_clave)
+        palabra_singular = singularizar(palabra_normalizada)
 
         resultados = {}
         for codigo, descripcion in catalogo.items():
             descripcion_normalizada = normalizar_texto(descripcion)
-            if palabra_normalizada in descripcion_normalizada:
+            # Buscar tanto el plural como el singular
+            if (palabra_normalizada in descripcion_normalizada or
+                palabra_singular in descripcion_normalizada):
                 resultados[codigo] = descripcion
 
         return {
