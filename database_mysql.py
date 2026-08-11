@@ -17,12 +17,29 @@ DB_CONFIG = {
     'collation': 'utf8mb4_unicode_ci'
 }
 
+print("="*80)
+print("🔧 DATABASE_MYSQL.PY - Configuración MySQL")
+print("="*80)
+print(f"Host: {DB_CONFIG['host']}")
+print(f"Port: {DB_CONFIG['port']}")
+print(f"Database: {DB_CONFIG['database']}")
+print(f"User: {DB_CONFIG['user']}")
+print(f"Password: {'***' if DB_CONFIG['password'] else '(vacío)'}")
+print("="*80)
+
 connection_pool = None
 
 def get_connection():
     global connection_pool
     if connection_pool is None:
-        connection_pool = pooling.MySQLConnectionPool(**DB_CONFIG)
+        try:
+            print(f"🔧 [MySQL] Intentando conectar a: {DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}")
+            print(f"🔧 [MySQL] Usuario: {DB_CONFIG['user']}")
+            connection_pool = pooling.MySQLConnectionPool(**DB_CONFIG)
+            print(f"✅ [MySQL] Connection pool creado correctamente")
+        except Exception as e:
+            print(f"❌ [MySQL] Error al crear connection pool: {e}")
+            raise
     return connection_pool.get_connection()
 
 def inicializar_bd():
@@ -398,15 +415,24 @@ def guardar_empresa_usuario(numero: str, empresa: Dict) -> bool:
 
 def obtener_usuario_por_numero(numero: str) -> Optional[Dict]:
     try:
+        print(f"🔍 [MySQL] Buscando usuario con número: {numero}")
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM usuarios WHERE numero = %s", (numero,))
         usuario = cursor.fetchone()
         cursor.close()
         conn.close()
+
+        if usuario:
+            print(f"✅ [MySQL] Usuario encontrado: ID={usuario['id']}, nombre={usuario['nombre']}")
+        else:
+            print(f"⚠️ [MySQL] Usuario NO encontrado para número: {numero}")
+
         return usuario
     except Error as e:
-        print(f"❌ Error al obtener usuario: {e}")
+        print(f"❌ [MySQL] Error al obtener usuario: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def obtener_segmentos_usuario(usuario_id: int) -> List[str]:
