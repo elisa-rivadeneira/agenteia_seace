@@ -23,8 +23,6 @@ print("="*80)
 print(f"Host: {DB_CONFIG['host']}")
 print(f"Port: {DB_CONFIG['port']}")
 print(f"Database: {DB_CONFIG['database']}")
-print(f"User: {DB_CONFIG['user']}")
-print(f"Password: {'***' if DB_CONFIG['password'] else '(vacío)'}")
 print("="*80)
 
 connection_pool = None
@@ -34,7 +32,6 @@ def get_connection():
     if connection_pool is None:
         try:
             print(f"🔧 [MySQL] Intentando conectar a: {DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}")
-            print(f"🔧 [MySQL] Usuario: {DB_CONFIG['user']}")
             connection_pool = pooling.MySQLConnectionPool(**DB_CONFIG)
             print(f"✅ [MySQL] Connection pool creado correctamente")
         except Exception as e:
