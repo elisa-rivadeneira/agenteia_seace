@@ -38,6 +38,7 @@ COPY config_empresa.json .
 COPY landing_page.html .
 COPY robots.txt .
 COPY start_services.sh .
+COPY check_version.py .
 COPY static/ ./static/
 
 # Create data directory for persistent storage
